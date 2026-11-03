@@ -10,7 +10,13 @@
     
     <style>
         body {
+            /* Fondo fotográfico hiperrealista del espacio profundo */
             background-color: #000;
+            background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            
             color: #33ff33;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
@@ -18,10 +24,10 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden; /* Evita barras de desplazamiento */
+            overflow: hidden;
         }
 
-        /* Lienzo donde dibujaremos el espacio */
+        /* Lienzo transparente para la animación */
         #fondo-espacial {
             position: fixed;
             top: 0;
@@ -29,24 +35,25 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            pointer-events: none;
         }
 
-        /* Efecto de monitor antiguo por encima de todo */
+        /* Scanlines del monitor antiguo */
         body::after {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.03) 2px, rgba(51, 255, 51, 0.03) 4px);
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.04) 2px, rgba(51, 255, 51, 0.04) 4px);
             pointer-events: none;
             z-index: 20;
         }
 
         .contenedor {
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(3px);
+            background-color: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(4px);
             padding: 30px;
-            border: 1px solid #33ff33;
-            box-shadow: 0 0 20px rgba(51, 255, 51, 0.3), inset 0 0 10px rgba(51, 255, 51, 0.1);
+            border: 1px solid rgba(51, 255, 51, 0.6);
+            box-shadow: 0 0 25px rgba(51, 255, 51, 0.2), inset 0 0 15px rgba(51, 255, 51, 0.1);
             text-align: center;
             width: 320px;
             position: relative;
@@ -79,7 +86,7 @@
             padding: 10px;
             margin: 10px 0;
             background-color: rgba(0, 0, 0, 0.7);
-            border: 1px solid #33ff33;
+            border: 1px solid rgba(51, 255, 51, 0.5);
             color: #33ff33;
             font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
@@ -88,11 +95,12 @@
         }
 
         input:focus {
-            box-shadow: 0 0 8px rgba(51, 255, 51, 0.5);
+            box-shadow: 0 0 10px rgba(51, 255, 51, 0.4);
+            border-color: #33ff33;
         }
 
         input::placeholder {
-            color: rgba(51, 255, 51, 0.4);
+            color: rgba(51, 255, 51, 0.3);
         }
 
         button {
@@ -111,9 +119,8 @@
         }
 
         button:hover {
-            background-color: #33ff33;
-            color: #000;
-            box-shadow: 0 0 15px rgba(51, 255, 51, 0.6);
+            background-color: rgba(51, 255, 51, 0.2);
+            box-shadow: 0 0 15px rgba(51, 255, 51, 0.5);
         }
 
         .texto-secundario {
@@ -129,7 +136,7 @@
             font-size: 36px;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 10px #33ff33;
+            text-shadow: 0 0 12px #33ff33;
             letter-spacing: 8px;
             margin: 15px 0;
         }
@@ -142,7 +149,7 @@
             border: 1px solid rgba(51, 255, 51, 0.3);
             padding: 10px;
             min-height: 100px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
         }
 
         #lista-jugadores li {
@@ -157,7 +164,6 @@
 </head>
 <body>
 
-    <!-- Lienzo animado para el espacio -->
     <canvas id="fondo-espacial"></canvas>
 
     <div class="contenedor" id="menu-principal">
@@ -178,15 +184,13 @@
         <div class="codigo-destacado" id="mostrar-codigo"></div>
         
         <p class="texto-secundario" style="text-align: left; margin-bottom: 5px;">TRIPULACIÓN DETECTADA:</p>
-        <ul id="lista-jugadores">
-            <!-- Los jugadores aparecen aquí -->
-        </ul>
+        <ul id="lista-jugadores"></ul>
         
         <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
     <script>
-        // --- ANIMACIÓN DEL ESPACIO ---
+        // --- ANIMACIÓN REALISTA DEL ESPACIO ---
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
         
@@ -197,109 +201,156 @@
         window.addEventListener('resize', redimensionar);
         redimensionar();
 
-        // Crear estrellas
+        // Generar estrellas parpadeantes
         const estrellas = [];
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 150; i++) {
             estrellas.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                radio: Math.random() * 1.5,
-                velocidad: Math.random() * 0.5 + 0.1 // Efecto de profundidad
+                radio: Math.random() * 1.2 + 0.3,
+                velocidad: Math.random() * 0.15 + 0.05,
+                opacidad: Math.random(),
+                cambioOpacidad: (Math.random() * 0.01 + 0.005) * (Math.random() < 0.5 ? 1 : -1)
             });
         }
 
         const objetosEspaciales = [];
 
         function dibujarEspacio() {
-            // Limpiar pantalla
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Limpiamos el lienzo de forma transparente para ver la foto de fondo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Mover y dibujar estrellas
-            ctx.fillStyle = '#ffffff';
-            estrellas.forEach(estrella => {
+            // 1. Estrellas parpadeantes
+            estrellas.forEach(e => {
+                e.opacidad += e.cambioOpacidad;
+                if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; }
+                if(e.opacidad >= 1) { e.opacidad = 1; e.cambioOpacidad *= -1; }
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${e.opacidad})`;
                 ctx.beginPath();
-                ctx.arc(estrella.x, estrella.y, estrella.radio, 0, Math.PI * 2);
+                ctx.arc(e.x, e.y, e.radio, 0, Math.PI * 2);
                 ctx.fill();
-                estrella.x -= estrella.velocidad;
-                if (estrella.x < 0) {
-                    estrella.x = canvas.width;
-                    estrella.y = Math.random() * canvas.height;
+                
+                e.x -= e.velocidad;
+                if (e.x < 0) {
+                    e.x = canvas.width;
+                    e.y = Math.random() * canvas.height;
                 }
             });
 
-            // Probabilidad de generar un asteroide o nave (1% por fotograma)
-            if (Math.random() < 0.01) {
-                const esNave = Math.random() > 0.8; // 20% naves, 80% asteroides
-                objetosEspaciales.push({
+            // Probabilidad de generar objeto: 0.5% por fotograma
+            if (Math.random() < 0.005) {
+                const esNave = Math.random() > 0.7; // 30% naves, 70% asteroides
+                let tamaño = esNave ? (Math.random() * 10 + 15) : (Math.random() * 30 + 15);
+                
+                let obj = {
                     tipo: esNave ? 'nave' : 'asteroide',
-                    x: canvas.width + 50,
+                    x: canvas.width + 100,
                     y: Math.random() * canvas.height,
-                    velocidad: esNave ? Math.random() * 2 + 2 : Math.random() * 1 + 0.5,
-                    tamaño: esNave ? 12 : Math.random() * 15 + 8
-                });
+                    velocidad: esNave ? Math.random() * 1.5 + 1 : Math.random() * 0.5 + 0.2,
+                    tamaño: tamaño,
+                    rotacion: 0,
+                    velRotacion: (Math.random() - 0.5) * 0.02
+                };
+
+                if (!esNave) {
+                    // Generar roca procedural irregular
+                    obj.puntos = [];
+                    let numPuntos = 7 + Math.floor(Math.random() * 5);
+                    for(let j=0; j<numPuntos; j++) {
+                        let angulo = (j / numPuntos) * Math.PI * 2;
+                        let radioVariado = tamaño * (0.7 + Math.random() * 0.4);
+                        obj.puntos.push({x: Math.cos(angulo)*radioVariado, y: Math.sin(angulo)*radioVariado});
+                    }
+                }
+                objetosEspaciales.push(obj);
             }
 
-            // Dibujar y mover asteroides/naves
+            // 2. Dibujar Objetos (Asteroides y Naves)
             for (let i = objetosEspaciales.length - 1; i >= 0; i--) {
                 let obj = objetosEspaciales[i];
                 obj.x -= obj.velocidad;
+                obj.rotacion += obj.velRotacion;
+
+                ctx.save();
+                ctx.translate(obj.x, obj.y);
 
                 if (obj.tipo === 'asteroide') {
-                    // Cuerpo del asteroide
-                    ctx.fillStyle = '#444';
+                    ctx.rotate(obj.rotacion);
+                    // Dibujar roca irregular
                     ctx.beginPath();
-                    ctx.arc(obj.x, obj.y, obj.tamaño, 0, Math.PI * 2);
+                    ctx.moveTo(obj.puntos[0].x, obj.puntos[0].y);
+                    for(let j=1; j<obj.puntos.length; j++) {
+                        ctx.lineTo(obj.puntos[j].x, obj.puntos[j].y);
+                    }
+                    ctx.closePath();
+
+                    // Sombreado 3D
+                    let grad = ctx.createRadialGradient(-obj.tamaño/3, -obj.tamaño/3, 0, 0, 0, obj.tamaño);
+                    grad.addColorStop(0, '#555');
+                    grad.addColorStop(0.5, '#222');
+                    grad.addColorStop(1, '#050505');
+                    
+                    ctx.fillStyle = grad;
                     ctx.fill();
-                    // Cráter para darle textura
-                    ctx.fillStyle = '#222';
-                    ctx.beginPath();
-                    ctx.arc(obj.x - obj.tamaño/3, obj.y - obj.tamaño/3, obj.tamaño/3, 0, Math.PI * 2);
-                    ctx.fill();
+                    // Borde iluminado sutilmente
+                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
                 } else {
-                    // Nave (Triángulo apuntando a la izquierda)
-                    ctx.fillStyle = '#778899';
+                    // Nave realista (diseño industrial oscuro)
+                    
+                    // Propulsor (Resplandor azul)
+                    let glow = ctx.createRadialGradient(obj.tamaño, 0, 0, obj.tamaño, 0, obj.tamaño*1.5);
+                    glow.addColorStop(0, 'rgba(0, 200, 255, 0.9)');
+                    glow.addColorStop(1, 'rgba(0, 200, 255, 0)');
+                    ctx.fillStyle = glow;
                     ctx.beginPath();
-                    ctx.moveTo(obj.x - obj.tamaño, obj.y);
-                    ctx.lineTo(obj.x + obj.tamaño, obj.y - obj.tamaño/2);
-                    ctx.lineTo(obj.x + obj.tamaño, obj.y + obj.tamaño/2);
+                    ctx.arc(obj.tamaño, 0, obj.tamaño*1.5, 0, Math.PI*2);
                     ctx.fill();
-                    // Propulsor de fuego
-                    ctx.fillStyle = '#ff5500';
+
+                    // Chasis principal
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(-obj.tamaño, -obj.tamaño/3, obj.tamaño*2, obj.tamaño/1.5);
+                    // Cabina delantera
+                    ctx.fillStyle = '#111';
                     ctx.beginPath();
-                    ctx.moveTo(obj.x + obj.tamaño, obj.y - obj.tamaño/4);
-                    ctx.lineTo(obj.x + obj.tamaño + obj.tamaño/1.5, obj.y);
-                    ctx.lineTo(obj.x + obj.tamaño, obj.y + obj.tamaño/4);
+                    ctx.moveTo(-obj.tamaño, -obj.tamaño/3);
+                    ctx.lineTo(-obj.tamaño*1.5, -obj.tamaño/6);
+                    ctx.lineTo(-obj.tamaño*1.5, obj.tamaño/6);
+                    ctx.lineTo(-obj.tamaño, obj.tamaño/3);
                     ctx.fill();
+                    // Alas/Alerones oscuros
+                    ctx.fillStyle = '#222';
+                    ctx.fillRect(-obj.tamaño*0.5, -obj.tamaño/1.2, obj.tamaño*0.8, obj.tamaño*1.6);
+                    // Detalles (Luces rojas)
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(-obj.tamaño*1.2, 0, 3, 3);
+                    ctx.fillRect(-obj.tamaño*0.2, -obj.tamaño/1.1, 2, 2);
                 }
 
-                // Eliminar objeto si sale de la pantalla
-                if (obj.x < -100) {
-                    objetosEspaciales.splice(i, 1);
-                }
+                ctx.restore();
+
+                // Eliminar si sale de pantalla
+                if (obj.x < -150) objetosEspaciales.splice(i, 1);
             }
-
             requestAnimationFrame(dibujarEspacio);
         }
         dibujarEspacio();
 
-        // --- CONFIGURACIÓN DE FIREBASE ---
+        // --- LÓGICA DE FIREBASE ---
         const firebaseConfig = {
             databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" 
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        // --- LÓGICA DEL JUEGO ---
         let miSalaActual = "";
 
         function generarCodigo() {
             const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let resultado = '';
-            for (let i = 0; i < 5; i++) {
-                resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-            }
+            for (let i = 0; i < 5; i++) resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
             return resultado;
         }
 
@@ -312,17 +363,9 @@
         function crearSala() {
             const nombre = document.getElementById('nombre-jugador').value;
             if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
-
             const codigo = generarCodigo();
             miSalaActual = codigo;
-            
-            db.ref('salas/' + codigo).set({
-                creador: nombre,
-                jugadores: {
-                    [nombre]: true
-                }
-            });
-
+            db.ref('salas/' + codigo).set({ creador: nombre, jugadores: { [nombre]: true } });
             mostrarLobbyUI(codigo);
             escucharCambiosSala(codigo);
         }
@@ -330,22 +373,15 @@
         function unirseSala() {
             const nombre = document.getElementById('nombre-jugador').value;
             const codigo = document.getElementById('codigo-input').value.toUpperCase();
-            
             if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
             if (codigo.length !== 5) return alert("ERROR: CÓDIGO INVÁLIDO.");
-
             db.ref('salas/' + codigo).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     miSalaActual = codigo;
-                    db.ref('salas/' + codigo + '/jugadores').update({
-                        [nombre]: true
-                    });
-                    
+                    db.ref('salas/' + codigo + '/jugadores').update({ [nombre]: true });
                     mostrarLobbyUI(codigo);
                     escucharCambiosSala(codigo);
-                } else {
-                    alert("ERROR: NAVE NO ENCONTRADA.");
-                }
+                } else alert("ERROR: NAVE NO ENCONTRADA.");
             });
         }
 
@@ -353,12 +389,8 @@
             db.ref('salas/' + codigo + '/jugadores').on('value', (snapshot) => {
                 const jugadores = snapshot.val();
                 const lista = document.getElementById('lista-jugadores');
-                
                 lista.innerHTML = ''; 
-                
-                for (let jugador in jugadores) {
-                    lista.innerHTML += `<li>${jugador} [EN LÍNEA]</li>`;
-                }
+                for (let jugador in jugadores) lista.innerHTML += `<li>${jugador} [EN LÍNEA]</li>`;
             });
         }
         
