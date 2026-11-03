@@ -57,7 +57,7 @@
         }
 
         .contenedor::before {
-            content: "SISTEMA MU-TH-UR 6000";
+            content: "SISTEMA OR - I - U600";
             position: absolute;
             top: -10px;
             left: 10px;
@@ -166,9 +166,9 @@
     <script>
         // --- 1. CARGAR LAS IMÁGENES ---
         const imgAsteroide = new Image();
+        // Cámbialo a 'mi-asteroide.png' si subiste tu propia imagen a GitHub
         imgAsteroide.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Asteroid_Ida.png/480px-Asteroid_Ida.png'; 
 
-        // Tus nuevas naves (debes subir estos archivos a GitHub)
         const imgNave1 = new Image(); imgNave1.src = 'nave1.png';
         const imgNave2 = new Image(); imgNave2.src = 'nave2.png';
         const imgNave3 = new Image(); imgNave3.src = 'nave3.png';
@@ -201,7 +201,7 @@
         function dibujarEspacio() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // --- DIBUJAR ESTRELLAS ---
+            // --- ESTRELLAS ---
             estrellas.forEach(e => {
                 e.opacidad += e.cambioOpacidad;
                 if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; }
@@ -216,31 +216,28 @@
                 if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
             });
 
-            // --- GENERAR ASTEROIDES (Muy rara vez) ---
-            if (imgAsteroide.complete && Math.random() < 0.005) {
+            // --- GENERAR ASTEROIDES (Probabilidad aumentada al 2%) ---
+            if (imgAsteroide.complete && Math.random() < 0.02) {
                 asteroides.push({
                     x: canvas.width + 150,
                     y: Math.random() * canvas.height,
-                    velocidad: Math.random() * 1 + 0.3,
+                    velocidad: Math.random() * 1.5 + 0.5, // Un poco más rápidos
                     tamaño: Math.random() * 150 + 80,
                     rotacion: Math.random() * Math.PI * 2,
                     velRotacion: (Math.random() - 0.5) * 0.02
                 });
             }
 
-            // --- GENERAR NAVES (Muy rara vez: 0.2% de probabilidad) ---
-            if (Math.random() < 0.002) {
-                let tipoNave = Math.floor(Math.random() * 3) + 1; // Elige 1, 2 o 3
-                let tamañoNave = Math.random() * 60 + 40; // Naves no muy grandes
+            // --- GENERAR NAVES (Probabilidad del 0.3%) ---
+            if (Math.random() < 0.003) {
+                let tipoNave = Math.floor(Math.random() * 3) + 1;
+                let tamañoNave = Math.random() * 60 + 40;
 
                 if (tipoNave === 1 && imgNave1.complete) {
-                    // Nave 1: De Derecha a Izquierda
                     naves.push({ tipo: 1, x: canvas.width + 100, y: Math.random() * canvas.height, velocidadX: -(Math.random() * 2 + 1), tamaño: tamañoNave, opacidad: 1 });
                 } else if (tipoNave === 2 && imgNave2.complete) {
-                    // Nave 2: De Izquierda a Derecha
                     naves.push({ tipo: 2, x: -100, y: Math.random() * canvas.height, velocidadX: Math.random() * 2 + 1, tamaño: tamañoNave, opacidad: 1 });
                 } else if (tipoNave === 3 && imgNave3.complete) {
-                    // Nave 3: Aparece y Desaparece en un punto aleatorio (se mueve lentísimo)
                     naves.push({ tipo: 3, x: Math.random() * (canvas.width - 200) + 100, y: Math.random() * (canvas.height - 200) + 100, velocidadX: (Math.random() - 0.5) * 0.2, tamaño: tamañoNave, opacidad: 0, faseBlink: 'apareciendo' });
                 }
             }
@@ -269,21 +266,16 @@
                 ctx.translate(nave.x, nave.y);
 
                 let imagenActual;
-                
-                if (nave.tipo === 1) {
-                    imagenActual = imgNave1;
-                } else if (nave.tipo === 2) {
-                    imagenActual = imgNave2;
-                } else if (nave.tipo === 3) {
+                if (nave.tipo === 1) imagenActual = imgNave1;
+                else if (nave.tipo === 2) imagenActual = imgNave2;
+                else if (nave.tipo === 3) {
                     imagenActual = imgNave3;
-                    // Lógica para que aparezca y desaparezca
                     if (nave.faseBlink === 'apareciendo') {
                         nave.opacidad += 0.005;
                         if (nave.opacidad >= 1) nave.faseBlink = 'desapareciendo';
                     } else {
                         nave.opacidad -= 0.005;
                     }
-                    // Forzar que la opacidad no se pase de los límites (0 a 1)
                     ctx.globalAlpha = Math.max(0, Math.min(1, nave.opacidad));
                 }
 
@@ -293,10 +285,9 @@
 
                 ctx.restore();
 
-                // Eliminar naves según su comportamiento
-                if (nave.tipo === 1 && nave.x < -200) naves.splice(i, 1); // Se salió por la izquierda
-                else if (nave.tipo === 2 && nave.x > canvas.width + 200) naves.splice(i, 1); // Se salió por la derecha
-                else if (nave.tipo === 3 && nave.faseBlink === 'desapareciendo' && nave.opacidad <= 0) naves.splice(i, 1); // Terminó de desaparecer
+                if (nave.tipo === 1 && nave.x < -200) naves.splice(i, 1); 
+                else if (nave.tipo === 2 && nave.x > canvas.width + 200) naves.splice(i, 1); 
+                else if (nave.tipo === 3 && nave.faseBlink === 'desapareciendo' && nave.opacidad <= 0) naves.splice(i, 1); 
             }
 
             requestAnimationFrame(dibujarEspacio);
