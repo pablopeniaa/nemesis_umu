@@ -175,7 +175,7 @@
     <script>
         // --- 1. CARGAR LA IMAGEN DEL ASTEROIDE ---
         const imgAsteroide = new Image();
-        imgAsteroide.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Asteroid_Ida.png/480px-Asteroid_Ida.png'; 
+        imgAsteroide.src = 'asteroide.png'; 
 
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
@@ -220,7 +220,7 @@
             });
 
             // Generar asteroides de imagen
-            if (imgAsteroide.complete && Math.random() < 0.008) {
+            if (imgAsteroide.complete && Math.random() < 0.05) {
                 asteroides.push({
                     x: canvas.width + 150,
                     y: Math.random() * canvas.height,
