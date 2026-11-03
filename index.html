@@ -190,7 +190,7 @@
     </div>
 
     <script>
-        // --- ANIMACIÓN REALISTA DEL ESPACIO ---
+        // --- ANIMACIÓN REALISTA DEL ESPACIO Y ASTEROIDES 3D ---
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
         
@@ -214,10 +214,9 @@
             });
         }
 
-        const objetosEspaciales = [];
+        const asteroides = [];
 
         function dibujarEspacio() {
-            // Limpiamos el lienzo de forma transparente para ver la foto de fondo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 1. Estrellas parpadeantes
@@ -238,102 +237,98 @@
                 }
             });
 
-            // Probabilidad de generar objeto: 0.5% por fotograma
-            if (Math.random() < 0.005) {
-                const esNave = Math.random() > 0.7; // 30% naves, 70% asteroides
-                let tamaño = esNave ? (Math.random() * 10 + 15) : (Math.random() * 30 + 15);
-                
+            // Probabilidad de generar un asteroide gigante: 0.3% por fotograma
+            if (Math.random() < 0.003) {
+                let tamaño = Math.random() * 100 + 50; // Asteroides inmensos
                 let obj = {
-                    tipo: esNave ? 'nave' : 'asteroide',
-                    x: canvas.width + 100,
+                    x: canvas.width + tamaño + 50,
                     y: Math.random() * canvas.height,
-                    velocidad: esNave ? Math.random() * 1.5 + 1 : Math.random() * 0.5 + 0.2,
+                    velocidad: Math.random() * 0.4 + 0.1, // Movimiento lento y pesado
                     tamaño: tamaño,
-                    rotacion: 0,
-                    velRotacion: (Math.random() - 0.5) * 0.02
+                    rotacion: Math.random() * Math.PI * 2,
+                    velRotacion: (Math.random() - 0.5) * 0.005, // Rotación muy sutil
+                    puntos: [],
+                    crateres: []
                 };
 
-                if (!esNave) {
-                    // Generar roca procedural irregular
-                    obj.puntos = [];
-                    let numPuntos = 7 + Math.floor(Math.random() * 5);
-                    for(let j=0; j<numPuntos; j++) {
-                        let angulo = (j / numPuntos) * Math.PI * 2;
-                        let radioVariado = tamaño * (0.7 + Math.random() * 0.4);
-                        obj.puntos.push({x: Math.cos(angulo)*radioVariado, y: Math.sin(angulo)*radioVariado});
-                    }
+                // Generar geometría irregular
+                let numPuntos = 15 + Math.floor(Math.random() * 10);
+                for(let j=0; j<numPuntos; j++) {
+                    let angulo = (j / numPuntos) * Math.PI * 2;
+                    let radioVariado = obj.tamaño * (0.65 + Math.random() * 0.45); // Muy deforme
+                    obj.puntos.push({x: Math.cos(angulo)*radioVariado, y: Math.sin(angulo)*radioVariado});
                 }
-                objetosEspaciales.push(obj);
+
+                // Generar cráteres de textura
+                let numCrateres = 15 + Math.floor(Math.random() * 15);
+                for(let j=0; j<numCrateres; j++) {
+                    obj.crateres.push({
+                        x: (Math.random() - 0.5) * (obj.tamaño * 1.5),
+                        y: (Math.random() - 0.5) * (obj.tamaño * 1.5),
+                        r: Math.random() * (obj.tamaño/5) + 3
+                    });
+                }
+                asteroides.push(obj);
             }
 
-            // 2. Dibujar Objetos (Asteroides y Naves)
-            for (let i = objetosEspaciales.length - 1; i >= 0; i--) {
-                let obj = objetosEspaciales[i];
+            // 2. Dibujar Asteroides Realistas
+            for (let i = asteroides.length - 1; i >= 0; i--) {
+                let obj = asteroides[i];
                 obj.x -= obj.velocidad;
                 obj.rotacion += obj.velRotacion;
 
                 ctx.save();
+                // Nos movemos al centro del asteroide
                 ctx.translate(obj.x, obj.y);
 
-                if (obj.tipo === 'asteroide') {
-                    ctx.rotate(obj.rotacion);
-                    // Dibujar roca irregular
-                    ctx.beginPath();
-                    ctx.moveTo(obj.puntos[0].x, obj.puntos[0].y);
-                    for(let j=1; j<obj.puntos.length; j++) {
-                        ctx.lineTo(obj.puntos[j].x, obj.puntos[j].y);
-                    }
-                    ctx.closePath();
+                // ROTAMOS solo la geometría (forma de la roca)
+                ctx.rotate(obj.rotacion);
 
-                    // Sombreado 3D
-                    let grad = ctx.createRadialGradient(-obj.tamaño/3, -obj.tamaño/3, 0, 0, 0, obj.tamaño);
-                    grad.addColorStop(0, '#555');
-                    grad.addColorStop(0.5, '#222');
-                    grad.addColorStop(1, '#050505');
-                    
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-                    // Borde iluminado sutilmente
-                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-
-                } else {
-                    // Nave realista (diseño industrial oscuro)
-                    
-                    // Propulsor (Resplandor azul)
-                    let glow = ctx.createRadialGradient(obj.tamaño, 0, 0, obj.tamaño, 0, obj.tamaño*1.5);
-                    glow.addColorStop(0, 'rgba(0, 200, 255, 0.9)');
-                    glow.addColorStop(1, 'rgba(0, 200, 255, 0)');
-                    ctx.fillStyle = glow;
-                    ctx.beginPath();
-                    ctx.arc(obj.tamaño, 0, obj.tamaño*1.5, 0, Math.PI*2);
-                    ctx.fill();
-
-                    // Chasis principal
-                    ctx.fillStyle = '#1a1a1a';
-                    ctx.fillRect(-obj.tamaño, -obj.tamaño/3, obj.tamaño*2, obj.tamaño/1.5);
-                    // Cabina delantera
-                    ctx.fillStyle = '#111';
-                    ctx.beginPath();
-                    ctx.moveTo(-obj.tamaño, -obj.tamaño/3);
-                    ctx.lineTo(-obj.tamaño*1.5, -obj.tamaño/6);
-                    ctx.lineTo(-obj.tamaño*1.5, obj.tamaño/6);
-                    ctx.lineTo(-obj.tamaño, obj.tamaño/3);
-                    ctx.fill();
-                    // Alas/Alerones oscuros
-                    ctx.fillStyle = '#222';
-                    ctx.fillRect(-obj.tamaño*0.5, -obj.tamaño/1.2, obj.tamaño*0.8, obj.tamaño*1.6);
-                    // Detalles (Luces rojas)
-                    ctx.fillStyle = '#ff0000';
-                    ctx.fillRect(-obj.tamaño*1.2, 0, 3, 3);
-                    ctx.fillRect(-obj.tamaño*0.2, -obj.tamaño/1.1, 2, 2);
+                // Trazar la forma irregular
+                ctx.beginPath();
+                ctx.moveTo(obj.puntos[0].x, obj.puntos[0].y);
+                for(let j=1; j<obj.puntos.length; j++) {
+                    ctx.lineTo(obj.puntos[j].x, obj.puntos[j].y);
                 }
+                ctx.closePath();
+                
+                // CLIP: Todo lo que dibujemos a partir de aquí no se saldrá de la forma de la roca
+                ctx.clip(); 
 
+                // Color base rocoso profundo
+                ctx.fillStyle = '#1e2428';
+                ctx.fill();
+
+                // Dibujar la textura (cráteres) rotando junto a la roca
+                obj.crateres.forEach(c => {
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+                    ctx.fillStyle = '#15191c';
+                    ctx.fill();
+                    ctx.strokeStyle = '#0a0d0e';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                });
+
+                // TRUCO 3D: Des-rotamos el lienzo ANTES de aplicar la luz.
+                // Así, la luz cálida siempre golpea desde arriba a la derecha, sin importar cómo gire la roca.
+                ctx.rotate(-obj.rotacion);
+
+                // Luz direccional hiperrealista (imita la imagen)
+                let luz = ctx.createRadialGradient(obj.tamaño*0.5, -obj.tamaño*0.5, 0, 0, 0, obj.tamaño*1.5);
+                luz.addColorStop(0, 'rgba(255, 170, 100, 0.65)'); // Luz cálida/naranja
+                luz.addColorStop(0.3, 'rgba(0, 0, 0, 0)');        // Centro neutro
+                luz.addColorStop(0.7, 'rgba(0, 0, 0, 0.85)');     // Sombra profunda a la izquierda
+                luz.addColorStop(1, 'rgba(0, 0, 0, 0.98)');       // Oscuridad absoluta
+
+                ctx.fillStyle = luz;
+                ctx.fillRect(-obj.tamaño*2, -obj.tamaño*2, obj.tamaño*4, obj.tamaño*4);
+
+                // Restaurar el lienzo original
                 ctx.restore();
 
-                // Eliminar si sale de pantalla
-                if (obj.x < -150) objetosEspaciales.splice(i, 1);
+                // Eliminar el asteroide si ya no se ve
+                if (obj.x < -obj.tamaño * 2) asteroides.splice(i, 1);
             }
             requestAnimationFrame(dibujarEspacio);
         }
