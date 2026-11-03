@@ -354,11 +354,7 @@
                 }
             );
             
-            // Rejilla de ayuda
-            const gridHelper = new THREE.GridHelper(40, 40, 0x336699, 0x112233);
-            gridHelper.position.y = 0.01; scene.add(gridHelper);
-
-            // Techo opaco
+                        // Techo opaco
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialTecho);
             techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
 
