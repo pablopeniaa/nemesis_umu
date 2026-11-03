@@ -66,20 +66,15 @@
         #lista-jugadores { list-style: none; padding: 0; margin-top: 15px; text-align: left; border: 1px solid rgba(51, 255, 51, 0.3); padding: 10px; min-height: 100px; background-color: rgba(0, 0, 0, 0.6); }
         #lista-jugadores li::before { content: "> "; }
 
-        /* NUEVO: Contenedor Pantalla Completa para el Juego 3D */
+        /* Contenedor Pantalla Completa para el Juego 3D */
         #pantalla-juego {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #000; z-index: 100; display: none; margin: 0; padding: 0;
         }
         
-        #tablero-juego {
-            width: 100%; height: 100%; cursor: crosshair;
-        }
-
-        #ui-juego {
-            position: absolute; top: 20px; left: 20px; z-index: 101; pointer-events: none;
-        }
-
+        #tablero-juego { width: 100%; height: 100%; cursor: crosshair; }
+        #ui-juego { position: absolute; top: 20px; left: 20px; z-index: 101; pointer-events: none; }
+        
         #instrucciones-3d {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.85); border: 1px solid #33ff33;
@@ -87,7 +82,6 @@
             pointer-events: none;
         }
 
-        /* Mirilla en el centro de la pantalla */
         #mirilla {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 4px; height: 4px; background-color: rgba(255,255,255,0.5); border-radius: 50%;
@@ -99,7 +93,6 @@
 
     <canvas id="fondo-espacial"></canvas>
 
-    <!-- MENÚ PRINCIPAL Y SALAS DE ESPERA -->
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
@@ -124,7 +117,6 @@
         <div id="resumen-elecciones" style="margin-top: 20px; font-size: 12px; text-align: left; border-top: 1px dashed #33ff33; padding-top: 10px;"></div>
     </div>
 
-    <!-- PANTALLA COMPLETA 3D -->
     <div id="pantalla-juego">
         <div id="ui-juego">
             <h3 style="margin:0; border-bottom: 1px solid #33ff33;">SALA PRINCIPAL - SECTOR 1</h3>
@@ -295,7 +287,6 @@
                     }
                 } 
                 else if (sala.estado === 'jugando') {
-                    // Limpiamos la pantalla 2D y mostramos la de 100vw/100vh
                     document.getElementById('fondo-espacial').style.display = 'none';
                     document.getElementById('pantalla-seleccion').style.display = 'none';
                     document.getElementById('pantalla-juego').style.display = 'block';
@@ -310,14 +301,12 @@
             });
         }
 
-        // --- MOTOR 3D (PRIMERA PERSONA) ---
+        // --- MOTOR 3D (PRIMERA PERSONA MULTIJUGADOR) ---
         function iniciarMotor3D() {
             const contenedor = document.getElementById('tablero-juego');
-            
-            // 1. Escena y Renderizador
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x020202);
-            scene.fog = new THREE.Fog(0x020202, 10, 45); // Niebla oscura para dar ambiente
+            scene.fog = new THREE.Fog(0x020202, 10, 45);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
@@ -325,116 +314,61 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
-            // 2. Luces
-            const ambientLight = new THREE.AmbientLight(0x222222);
+            const ambientLight = new THREE.AmbientLight(0x333333);
             scene.add(ambientLight);
             
-            // Luz central verde
-            const pointLight = new THREE.PointLight(0x33ff33, 1, 40); 
+            const pointLight = new THREE.PointLight(0x33ff33, 0.8, 40); 
             pointLight.position.set(0, 10, 0);
             scene.add(pointLight);
 
-            // 3. Crear la Habitación Cerrada (40x40)
+            // --- ESCENARIO ---
             const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x111111 });
             const materialPared = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
             
-            // Suelo
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
-            suelo.rotation.x = -Math.PI / 2;
-            scene.add(suelo);
+            suelo.rotation.x = -Math.PI / 2; scene.add(suelo);
             
-            // Rejilla del suelo para saber que te mueves
             const gridHelper = new THREE.GridHelper(40, 40, 0x114411, 0x051105);
-            gridHelper.position.y = 0.01;
-            scene.add(gridHelper);
+            gridHelper.position.y = 0.01; scene.add(gridHelper);
 
-            // Techo
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
-            techo.rotation.x = Math.PI / 2;
-            techo.position.y = 15;
-            scene.add(techo);
+            techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
 
-            // Paredes (Norte, Sur, Este, Oeste)
             const geomPared = new THREE.PlaneGeometry(40, 15);
-            
-            const pared1 = new THREE.Mesh(geomPared, materialPared);
-            pared1.position.set(0, 7.5, -20);
-            scene.add(pared1);
+            const pared1 = new THREE.Mesh(geomPared, materialPared); pared1.position.set(0, 7.5, -20); scene.add(pared1);
+            const pared2 = new THREE.Mesh(geomPared, materialPared); pared2.position.set(0, 7.5, 20); pared2.rotation.y = Math.PI; scene.add(pared2);
+            const pared3 = new THREE.Mesh(geomPared, materialPared); pared3.position.set(-20, 7.5, 0); pared3.rotation.y = Math.PI / 2; scene.add(pared3);
+            const pared4 = new THREE.Mesh(geomPared, materialPared); pared4.position.set(20, 7.5, 0); pared4.rotation.y = -Math.PI / 2; scene.add(pared4);
 
-            const pared2 = new THREE.Mesh(geomPared, materialPared);
-            pared2.position.set(0, 7.5, 20);
-            pared2.rotation.y = Math.PI;
-            scene.add(pared2);
-
-            const pared3 = new THREE.Mesh(geomPared, materialPared);
-            pared3.position.set(-20, 7.5, 0);
-            pared3.rotation.y = Math.PI / 2;
-            scene.add(pared3);
-
-            const pared4 = new THREE.Mesh(geomPared, materialPared);
-            pared4.position.set(20, 7.5, 0);
-            pared4.rotation.y = -Math.PI / 2;
-            scene.add(pared4);
-
-            // 4. Puertas de compuerta en cada pared
             const geomPuerta = new THREE.PlaneGeometry(6, 10);
-            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x550000 }); // Rojas oscuras
+            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x550000 });
+            const puerta1 = new THREE.Mesh(geomPuerta, materialPuerta); puerta1.position.set(0, 5, -19.9); scene.add(puerta1);
+            const puerta2 = new THREE.Mesh(geomPuerta, materialPuerta); puerta2.position.set(0, 5, 19.9); puerta2.rotation.y = Math.PI; scene.add(puerta2);
+            const puerta3 = new THREE.Mesh(geomPuerta, materialPuerta); puerta3.position.set(-19.9, 5, 0); puerta3.rotation.y = Math.PI / 2; scene.add(puerta3);
+            const puerta4 = new THREE.Mesh(geomPuerta, materialPuerta); puerta4.position.set(19.9, 5, 0); puerta4.rotation.y = -Math.PI / 2; scene.add(puerta4);
 
-            const puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
-            puerta1.position.set(0, 5, -19.9); // Pegada a la pared norte
-            scene.add(puerta1);
-
-            const puerta2 = new THREE.Mesh(geomPuerta, materialPuerta);
-            puerta2.position.set(0, 5, 19.9);
-            puerta2.rotation.y = Math.PI;
-            scene.add(puerta2);
-
-            const puerta3 = new THREE.Mesh(geomPuerta, materialPuerta);
-            puerta3.position.set(-19.9, 5, 0);
-            puerta3.rotation.y = Math.PI / 2;
-            scene.add(puerta3);
-
-            const puerta4 = new THREE.Mesh(geomPuerta, materialPuerta);
-            puerta4.position.set(19.9, 5, 0);
-            puerta4.rotation.y = -Math.PI / 2;
-            scene.add(puerta4);
-
-            // 5. Configurar Jugador / Cámara
-            camera.position.set(0, 6, 0); // Altura de los ojos humanos
-            camera.rotation.order = 'YXZ'; // Para que el ratón no rote la cámara en diagonal
-
-            let yaw = 0; // Giro izquierda/derecha
-            let pitch = 0; // Giro arriba/abajo
+            // --- JUGADOR Y CONTROLES ---
+            camera.position.set(Math.random()*10 - 5, 6, Math.random()*10 - 5); // Empezar en una zona aleatoria
+            camera.rotation.order = 'YXZ'; 
+            let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
             const velocidad = 0.2;
+            const radioColision = 2.0; // Espacio vital entre jugadores
 
-            // Bloquear el ratón al hacer clic (Controles FPS)
-            contenedor.addEventListener('click', () => {
-                contenedor.requestPointerLock();
-            });
-
+            contenedor.addEventListener('click', () => contenedor.requestPointerLock());
             document.addEventListener('pointerlockchange', () => {
-                if (document.pointerLockElement === contenedor) {
-                    document.getElementById('instrucciones-3d').style.display = 'none';
-                } else {
-                    document.getElementById('instrucciones-3d').style.display = 'block';
-                }
+                document.getElementById('instrucciones-3d').style.display = document.pointerLockElement === contenedor ? 'none' : 'block';
             });
 
-            // Rotación con el ratón
             document.addEventListener('mousemove', (e) => {
                 if (document.pointerLockElement === contenedor) {
                     yaw -= e.movementX * 0.002;
                     pitch -= e.movementY * 0.002;
-                    
-                    // Limitar para que no pueda dar la vuelta a la cabeza hacia atrás
                     pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
-                    
                     camera.rotation.set(pitch, yaw, 0);
                 }
             });
 
-            // Capturar teclado
             window.addEventListener('keydown', (e) => {
                 if(e.key.toLowerCase() === 'w') teclas.w = true;
                 if(e.key.toLowerCase() === 'a') teclas.a = true;
@@ -455,30 +389,110 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
+            // --- CREACIÓN DE MODELOS HUMANOS ---
+            function crearModeloHumano(colorHex) {
+                const grupo = new THREE.Group();
+                const materialColor = new THREE.MeshLambertMaterial({ color: colorHex });
+                
+                // Cuerpo (Traje Espacial)
+                const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 4, 16), materialColor);
+                cuerpo.position.y = 2; // Va de 0 a 4 de altura
+                grupo.add(cuerpo);
+                
+                // Cabeza (Casco)
+                const cabeza = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), materialColor);
+                cabeza.position.y = 5.1; 
+                grupo.add(cabeza);
+                
+                // Visor del casco (Para saber hacia dónde mira el jugador)
+                const visor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 1.2), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+                visor.position.set(0, 5.3, -0.7); // El visor apunta hacia "-z" (el frente en Three.js)
+                grupo.add(visor);
+
+                return grupo;
+            }
+
+            // --- SISTEMA MULTIJUGADOR ---
+            const otrosJugadoresModelos = {};
+            
+            // Escuchar posiciones de Firebase
+            db.ref('salas/' + miSalaActual + '/posiciones').on('value', (snapshot) => {
+                const posiciones = snapshot.val() || {};
+                
+                for (let nombre in posiciones) {
+                    if (nombre === miNombre) continue; // No nos dibujamos a nosotros mismos
+                    
+                    if (!otrosJugadoresModelos[nombre]) {
+                        // Es un jugador nuevo, creamos su astronauta averiguando su color
+                        db.ref('salas/' + miSalaActual + '/jugadores/' + nombre).once('value').then(snapRol => {
+                            let rol = snapRol.val();
+                            let color = coloresPersonajes[rol] || "#aaaaaa";
+                            let modelo = crearModeloHumano(color);
+                            scene.add(modelo);
+                            otrosJugadoresModelos[nombre] = modelo;
+                        });
+                    } else {
+                        // Actualizar posición y rotación
+                        otrosJugadoresModelos[nombre].position.x = posiciones[nombre].x;
+                        otrosJugadoresModelos[nombre].position.z = posiciones[nombre].z;
+                        otrosJugadoresModelos[nombre].rotation.y = posiciones[nombre].r;
+                    }
+                }
+            });
+
+            function colisionaConAlguien(testX, testZ) {
+                for (let nombre in otrosJugadoresModelos) {
+                    let otro = otrosJugadoresModelos[nombre];
+                    let dx = testX - otro.position.x;
+                    let dz = testZ - otro.position.z;
+                    if (Math.sqrt(dx*dx + dz*dz) < radioColision) return true;
+                }
+                return false;
+            }
+
             const direccion = new THREE.Vector3();
             const derecha = new THREE.Vector3();
+            let lastX = 0, lastZ = 0, lastYaw = 0; // Para no saturar Firebase si no nos movemos
 
-            // 6. Bucle de Animación
+            // --- BUCLE DE JUEGO ---
             function animar3D() {
                 requestAnimationFrame(animar3D);
 
-                // Calcular hacia dónde miramos para caminar hacia adelante
                 camera.getWorldDirection(direccion);
-                direccion.y = 0; // Para no volar al mirar hacia arriba
-                direccion.normalize();
-                
-                // CORRECCIÓN: Invertimos el orden para que la derecha sea realmente la derecha
+                direccion.y = 0; direccion.normalize();
                 derecha.crossVectors(direccion, camera.up).normalize();
 
-                if (teclas.w) camera.position.addScaledVector(direccion, velocidad);
-                if (teclas.s) camera.position.addScaledVector(direccion, -velocidad);
-                if (teclas.a) camera.position.addScaledVector(derecha, -velocidad); // A = Izquierda
-                if (teclas.d) camera.position.addScaledVector(derecha, velocidad);  // D = Derecha
+                let movX = 0; let movZ = 0;
 
-                // COLISIONES: Mantener al jugador dentro de la sala (Rango de -19 a 19 para la sala de 40x40)
-                camera.position.x = Math.max(-19, Math.min(19, camera.position.x));
-                camera.position.z = Math.max(-19, Math.min(19, camera.position.z));
-                camera.position.y = 6; // Mantener la altura constante
+                if (teclas.w) { movX += direccion.x * velocidad; movZ += direccion.z * velocidad; }
+                if (teclas.s) { movX -= direccion.x * velocidad; movZ -= direccion.z * velocidad; }
+                if (teclas.a) { movX -= derecha.x * velocidad; movZ -= derecha.z * velocidad; }
+                if (teclas.d) { movX += derecha.x * velocidad; movZ += derecha.z * velocidad; }
+
+                // Comprobar colisiones eje por eje para permitir el deslizamiento
+                let testX = camera.position.x + movX;
+                let testZ = camera.position.z + movZ;
+
+                // Colisiones con las paredes de la habitación (-18 a 18 para no atravesarlas)
+                if (testX < -18 || testX > 18) movX = 0;
+                if (testZ < -18 || testZ > 18) movZ = 0;
+
+                // Colisiones con otros humanos
+                if (colisionaConAlguien(camera.position.x + movX, camera.position.z)) movX = 0;
+                if (colisionaConAlguien(camera.position.x, camera.position.z + movZ)) movZ = 0;
+
+                camera.position.x += movX;
+                camera.position.z += movZ;
+
+                // Enviar nuestra posición a Firebase SOLO si nos hemos movido o girado
+                if (Math.abs(camera.position.x - lastX) > 0.05 || Math.abs(camera.position.z - lastZ) > 0.05 || Math.abs(yaw - lastYaw) > 0.05) {
+                    db.ref('salas/' + miSalaActual + '/posiciones/' + miNombre).set({
+                        x: camera.position.x,
+                        z: camera.position.z,
+                        r: yaw // Enviamos hacia donde miramos para rotar nuestro modelo en sus pantallas
+                    });
+                    lastX = camera.position.x; lastZ = camera.position.z; lastYaw = yaw;
+                }
 
                 renderer.render(scene, camera);
             }
