@@ -326,21 +326,37 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
-            // --- CARGA DE TEXTURA DEL SUELO ---
-            const textureLoader = new THREE.TextureLoader();
-            const texturaSuelo = textureLoader.load('pngwing.com.jpg');
-            texturaSuelo.wrapS = THREE.RepeatWrapping;
-            texturaSuelo.wrapT = THREE.RepeatWrapping;
-            texturaSuelo.repeat.set(10, 10); 
-
-            // --- ESCENARIO ---
-            // NUEVO: Le añadimos color: 0x555555 por si la textura falla, que se vea gris
-            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x555555, map: texturaSuelo });
+           // --- ESCENARIO CON CARGA SEGURA ---
+            // 1. Primero creamos el suelo gris sólido
+            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x555555 });
             const materialPared = new THREE.MeshLambertMaterial({ color: 0x222222 });
-            const materialTecho = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            const materialTecho = new THREE.MeshLambertMaterial({ color: 0x111111 }); 
             
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
-            suelo.rotation.x = -Math.PI / 2; scene.add(suelo);
+            suelo.rotation.x = -Math.PI / 2; 
+            scene.add(suelo);
+
+            // 2. Intentamos cargar la imagen de forma asíncrona
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                'pngwing.com.jpg', 
+                function (textura) {
+                    // Si la encuentra, la configura y la pega en el suelo
+                    textura.wrapS = THREE.RepeatWrapping;
+                    textura.wrapT = THREE.RepeatWrapping;
+                    textura.repeat.set(10, 10); 
+                    materialSuelo.map = textura;
+                    materialSuelo.needsUpdate = true; // Avisamos a la tarjeta gráfica del cambio
+                },
+                undefined,
+                function (error) {
+                    console.log('No se pudo cargar la imagen del suelo. Se mantiene el suelo gris.');
+                }
+            );
+            
+            // Rejilla de ayuda
+            const gridHelper = new THREE.GridHelper(40, 40, 0x336699, 0x112233);
+            gridHelper.position.y = 0.01; scene.add(gridHelper);
 
             // Techo opaco
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialTecho);
