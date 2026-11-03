@@ -181,7 +181,7 @@ function iniciarMotor3D(cantidadJugadores) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     contenedor.appendChild(renderer.domElement);
 
-    // --- MATERIALES COMPARTIDOS (Mismo suelo, paredes y techo idénticos) ---
+    // --- MATERIALES COMPARTIDOS ---
     const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
@@ -202,12 +202,18 @@ function iniciarMotor3D(cantidadJugadores) {
     const geomPuerta = new THREE.PlaneGeometry(6, 10);
     const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x1f382b });
 
-    // --- CONSTRUCTOR DE SALA HEXAGONAL ---
-    function crearSalaHexagonal(offsetX, offsetZ) {
-        const grupoSala = new THREE.Group();
-        const radioSala = 22; // Tamaño de la sala hexagonal
+    // Lista de posiciones de los focos en el techo (los mismos 7 focos detallados)
+    const posicionesFocosTecho = [
+        { x: -12, z: -12 }, { x: 12, z: -12 },
+        { x: -12, z: 12 }, { x: 12, z: 12 },
+        { x: 0, z: 0 }, { x: -12, z: 0 }, { x: 12, z: 0 }
+    ];
 
-        // Suelo hexagonal / plano base
+    // --- CONSTRUCTOR DE SALA HEXAGONAL ---
+    function crearSalaHexagonal(offsetX, offsetZ, esHibernatorio) {
+        const grupoSala = new THREE.Group();
+
+        // Suelo
         const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
         suelo.rotation.x = -Math.PI / 2; 
         grupoSala.add(suelo);
@@ -226,23 +232,20 @@ function iniciarMotor3D(cantidadJugadores) {
             vigaZ.position.set(i, 14.6, 0); grupoSala.add(vigaZ);
         }
 
-        // 6 Paredes formando el hexágono (o estructura modular conectada)
-        // Pared Norte (Con 2 puertas o acceso principal)
+        // Paredes del hexágono / sala cuadrada
         const paredN = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredN.position.set(0, 7.5, -20); grupoSala.add(paredN);
 
-        // Pared Sur (Con puertas opuestas para avanzar a la siguiente sala hexagonal)
         const paredS = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredS.position.set(0, 7.5, 20); paredS.rotation.y = Math.PI; grupoSala.add(paredS);
 
-        // Paredes laterales
         const paredE = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredE.position.set(-20, 7.5, 0); paredE.rotation.y = Math.PI / 2; grupoSala.add(paredE);
 
         const paredO = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; grupoSala.add(paredO);
 
-        // Puertas en los lados opuestos (Entrada y Salida conectadas)
+        // Puertas en los lados opuestos
         let puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
         puerta1.position.set(-8, 5, 19.85); puerta1.rotation.y = Math.PI; grupoSala.add(puerta1);
 
@@ -255,26 +258,43 @@ function iniciarMotor3D(cantidadJugadores) {
         let puertaO = new THREE.Mesh(geomPuerta, materialPuerta);
         puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; grupoSala.add(puertaO);
 
+        // --- SISTEMA DE LUCES POR SALA ---
+        // Si es el Hibernatorio, todos los focos están encendidos. En las demás salas, algunos sí y otros no de forma aleatoria.
+        posicionesFocosTecho.forEach((pos, index) => {
+            const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 16), matViga);
+            focoBase.position.set(pos.x + offsetX, 14.85, pos.z + offsetZ); 
+            scene.add(focoBase);
+
+            let encendido = esHibernatorio ? true : (index % 2 === 0 || Math.random() > 0.4); // En el hibernatorio todas, en las demás variable
+
+            const colorLed = encendido ? 0x88ccff : 0x333333;
+            const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({ color: colorLed }));
+            focoLed.position.set(pos.x + offsetX, 14.65, pos.z + offsetZ); 
+            scene.add(focoLed);
+
+            if (encendido) {
+                const luz = new THREE.PointLight(0x88bbff, 0.8, 30);
+                luz.position.set(pos.x + offsetX, 14.0, pos.z + offsetZ); 
+                scene.add(luz);
+            }
+        });
+
         grupoSala.position.set(offsetX, 0, offsetZ);
         scene.add(grupoSala);
     }
 
-    // 1. Creamos la sala principal (Hibernatorio) en el centro (0,0)
-    crearSalaHexagonal(0, 0);
+    // 1. Creamos el Hibernatorio Central en (0,0) con TODAS las luces encendidas
+    crearSalaHexagonal(0, 0, true);
 
-    // 2. Generamos salas hexagonales conectadas en las 4 direcciones cardinales (Norte, Sur, Este, Oeste)
-    crearSalaHexagonal(0, -40);  // Sala Norte
-    crearSalaHexagonal(0, 40);   // Sala Sur
-    crearSalaHexagonal(-40, 0);  // Sala Este
-    crearSalaHexagonal(40, 0);   // Sala Oeste
+    // 2. Creamos las salas adyacentes con luces variables (algunas sí, algunas no)
+    crearSalaHexagonal(0, -40, false);  // Sala Norte
+    crearSalaHexagonal(0, 40, false);   // Sala Sur
+    crearSalaHexagonal(-40, 0, false);  // Sala Este
+    crearSalaHexagonal(40, 0, false);   // Sala Oeste
 
-    // --- ILUMINACIÓN GLOBAL ---
-    const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
+    // Luz ambiental general tenue
+    const ambientLight = new THREE.AmbientLight(0x223344, 0.5);
     scene.add(ambientLight);
-
-    const luzPrincipal = new THREE.PointLight(0x88bbff, 0.8, 30);
-    luzPrincipal.position.set(0, 14.0, 0);
-    scene.add(luzPrincipal);
 
     // --- CÁPSULAS DE HIBERNACIÓN (Solo en el Hibernatorio Central) ---
     const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
@@ -309,7 +329,7 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoCapsula);
     }
 
-    // --- ASTRONAUTA ESTRADA (En el centro) ---
+    // --- ASTRONAUTA ESTRADA (En el centro del Hibernatorio) ---
     const grupoEstrada = new THREE.Group();
     const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); 
     const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
@@ -453,7 +473,7 @@ function iniciarMotor3D(cantidadJugadores) {
         let testX = camera.position.x + movX;
         let testZ = camera.position.z + movZ;
 
-        // Ampliamos los límites de movimiento globales para permitir explorar las salas adyacentes
+        // Límites expandidos para poder moverte por las salas adyacentes
         if (testX < -58 || testX > 58) movX = 0;
         if (testZ < -58 || testZ > 58) movZ = 0;
 
