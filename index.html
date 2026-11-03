@@ -88,7 +88,7 @@
             z-index: 101; pointer-events: none;
         }
 
-        /* NUEVO: Título Cinematográfico */
+        /* Título Cinematográfico */
         #titulo-zona {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
             font-size: 80px; color: #3366ff; text-shadow: 0 0 30px rgba(51,102,255,1);
@@ -131,7 +131,6 @@
             <p id="info-rol" class="texto-secundario" style="margin: 5px 0;"></p>
         </div>
         
-        <!-- Título que aparece en grande -->
         <div id="titulo-zona">HIBERNATORIO</div>
 
         <div id="instrucciones-3d">
@@ -301,14 +300,13 @@
                         let colorFinal = coloresPersonajes[miPersonajeAsignado] || "#aaaaaa"; 
                         document.getElementById('info-rol').innerHTML = `IDENTIFICACIÓN: ${miNombre} | ROL: <span style="color:${colorFinal}">${miPersonajeAsignado || "Desconocido"}</span>`;
                         
-                        // Efecto cinemático HIBERNATORIO
                         const tituloZona = document.getElementById('titulo-zona');
                         tituloZona.style.display = 'block';
-                        setTimeout(() => tituloZona.style.opacity = '1', 500); // Aparece suavemente
+                        setTimeout(() => tituloZona.style.opacity = '1', 500); 
                         setTimeout(() => {
-                            tituloZona.style.opacity = '0'; // Se desvanece
+                            tituloZona.style.opacity = '0'; 
                             setTimeout(() => tituloZona.style.display = 'none', 2000);
-                        }, 4000); // Dura 4 segundos en pantalla
+                        }, 4000); 
 
                         iniciarMotor3D();
                     }
@@ -320,34 +318,33 @@
         function iniciarMotor3D() {
             const contenedor = document.getElementById('tablero-juego');
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505);
-            scene.fog = new THREE.Fog(0x050505, 10, 50);
+            scene.background = new THREE.Color(0x020202);
+            scene.fog = new THREE.Fog(0x020202, 10, 45);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
-            // Luces (Más iluminado para la sala)
-            const ambientLight = new THREE.AmbientLight(0x666666);
-            scene.add(ambientLight);
-            
-            const pointLight = new THREE.PointLight(0xccffff, 1.2, 80); // Luz blanca/azulada brillante
-            pointLight.position.set(0, 12, 0);
-            scene.add(pointLight);
+            // --- CARGA DE TEXTURA DEL SUELO ---
+            // Cargamos la imagen indicada (pngwing.com.jpg) para usarla como textura
+            const textureLoader = new THREE.TextureLoader();
+            const texturaSuelo = textureLoader.load('pngwing.com.jpg');
+            // Repetimos la textura 10 veces a lo largo y ancho para que parezcan baldosas y no se estire
+            texturaSuelo.wrapS = THREE.RepeatWrapping;
+            texturaSuelo.wrapT = THREE.RepeatWrapping;
+            texturaSuelo.repeat.set(10, 10); 
 
             // --- ESCENARIO ---
-            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x222222 });
-            const materialPared = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const materialSuelo = new THREE.MeshLambertMaterial({ map: texturaSuelo });
+            const materialPared = new THREE.MeshLambertMaterial({ color: 0x222222 });
+            const materialTecho = new THREE.MeshLambertMaterial({ color: 0x111111 }); // Techo sólido oscuro
             
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
             suelo.rotation.x = -Math.PI / 2; scene.add(suelo);
-            
-            const gridHelper = new THREE.GridHelper(40, 40, 0x336699, 0x112233);
-            gridHelper.position.y = 0.01; scene.add(gridHelper);
 
-            const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
+            // Techo opaco
+            const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialTecho);
             techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
 
             const geomPared = new THREE.PlaneGeometry(40, 15);
@@ -356,15 +353,42 @@
             const paredE = new THREE.Mesh(geomPared, materialPared); paredE.position.set(-20, 7.5, 0); paredE.rotation.y = Math.PI / 2; scene.add(paredE);
             const paredO = new THREE.Mesh(geomPared, materialPared); paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; scene.add(paredO);
 
+            // --- FOCOS Y LUZ FÍSICA EN EL TECHO ---
+            // Luz base muy tenue para que se vea en las sombras
+            const ambientLight = new THREE.AmbientLight(0x222222);
+            scene.add(ambientLight);
+
+            // Distribución de 5 focos en el techo
+            const posicionesFocos = [
+                { x: -10, z: -10 }, { x: 10, z: -10 },
+                { x: -10, z: 10 }, { x: 10, z: 10 },
+                { x: 0, z: 0 } // Foco central
+            ];
+
+            posicionesFocos.forEach(pos => {
+                // Modelo de la base de la lámpara (enganchada al techo)
+                const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.2, 16), new THREE.MeshLambertMaterial({color: 0x444444}));
+                focoBase.position.set(pos.x, 14.9, pos.z);
+                scene.add(focoBase);
+
+                // Cristal/Led de la lámpara (Brillante)
+                const focoLuz = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.3, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                focoLuz.position.set(pos.x, 14.7, pos.z);
+                scene.add(focoLuz);
+
+                // Emisor real de luz
+                const luz = new THREE.PointLight(0xccffff, 0.8, 30);
+                luz.position.set(pos.x, 14.5, pos.z);
+                scene.add(luz);
+            });
+
             // --- PUERTAS ---
             const geomPuerta = new THREE.PlaneGeometry(6, 10);
-            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x224422 }); // Puertas verdosas/oscuras
+            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x224422 });
 
-            // Sur (+Z): 2 Puertas
             const puertaS1 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS1.position.set(-8, 5, 19.9); puertaS1.rotation.y = Math.PI; scene.add(puertaS1);
             const puertaS2 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS2.position.set(8, 5, 19.9); puertaS2.rotation.y = Math.PI; scene.add(puertaS2);
 
-            // Este y Oeste (1 Puerta cada una)
             const puertaE = new THREE.Mesh(geomPuerta, materialPuerta); puertaE.position.set(-19.9, 5, 0); puertaE.rotation.y = Math.PI / 2; scene.add(puertaE);
             const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.9, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
 
@@ -373,19 +397,15 @@
             const matCapsulaCristal = new THREE.MeshLambertMaterial({ color: 0x3388ff, transparent: true, opacity: 0.7, emissive: 0x113366 });
             
             for(let i=0; i<4; i++) {
-                let posX = -12 + (i * 8); // Separadas por 8 unidades
-                
+                let posX = -12 + (i * 8);
                 let base = new THREE.Mesh(new THREE.BoxGeometry(4, 9, 2), matCapsulaBase);
-                base.position.set(posX, 4.5, -19); // Pegadas a la pared norte
-                scene.add(base);
-                
+                base.position.set(posX, 4.5, -19); scene.add(base);
                 let cristal = new THREE.Mesh(new THREE.BoxGeometry(3.6, 7, 2.2), matCapsulaCristal);
-                cristal.position.set(posX, 4.5, -19); // Ligeramente más afuera para el cristal
-                scene.add(cristal);
+                cristal.position.set(posX, 4.5, -19); scene.add(cristal);
             }
 
             // --- JUGADOR Y CONTROLES ---
-            camera.position.set(0, 6, 0); // Aparecer en el centro
+            camera.position.set(0, 6, 0); 
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
@@ -399,8 +419,7 @@
 
             document.addEventListener('mousemove', (e) => {
                 if (document.pointerLockElement === contenedor) {
-                    yaw -= e.movementX * 0.002;
-                    pitch -= e.movementY * 0.002;
+                    yaw -= e.movementX * 0.002; pitch -= e.movementY * 0.002;
                     pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
                     camera.rotation.set(pitch, yaw, 0);
                 }
@@ -485,7 +504,6 @@
                 let testX = camera.position.x + movX;
                 let testZ = camera.position.z + movZ;
 
-                // Colisiones con paredes. Modificado para no atravesar las cápsulas en el norte (Z = -17 en vez de -18)
                 if (testX < -18 || testX > 18) movX = 0;
                 if (testZ < -17 || testZ > 18) movZ = 0;
 
