@@ -169,7 +169,7 @@ function escucharCambiosSala(codigo) {
     });
 }
 
-// --- MOTOR 3D Y GENERADOR DE SALAS HEXAGONALES ---
+// --- MOTOR 3D Y MAPA MODULAR ---
 function iniciarMotor3D(cantidadJugadores) {
     const contenedor = document.getElementById('tablero-juego');
     const scene = new THREE.Scene();
@@ -182,7 +182,6 @@ function iniciarMotor3D(cantidadJugadores) {
     renderer.outputEncoding = THREE.sRGBEncoding;
     contenedor.appendChild(renderer.domElement);
 
-    // --- ILUMINACIÓN GLOBAL ROBUSTA (Soluciona el problema de visibilidad) ---
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
@@ -203,7 +202,6 @@ function iniciarMotor3D(cantidadJugadores) {
         }
     );
 
-    const matParedPanel = new THREE.MeshStandardMaterial({ color: 0x3b424d, roughness: 0.5 });
     const matBordePanel = new THREE.MeshStandardMaterial({ color: 0x15181c, roughness: 0.7 });
     const matTechoPlaca = new THREE.MeshStandardMaterial({ color: 0x1e2229, roughness: 0.6 });
     const matViga = new THREE.MeshStandardMaterial({ color: 0x4a525f, roughness: 0.4 });
@@ -248,11 +246,11 @@ function iniciarMotor3D(cantidadJugadores) {
         const paredO = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; grupoSala.add(paredO);
 
-        let puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
-        puerta1.position.set(-8, 5, 19.85); puerta1.rotation.y = Math.PI; grupoSala.add(puerta1);
+        let puertaN = new THREE.Mesh(geomPuerta, materialPuerta);
+        puertaN.position.set(0, 5, -19.85); grupoSala.add(puertaN);
 
-        let puerta2 = new THREE.Mesh(geomPuerta, materialPuerta);
-        puerta2.position.set(8, 5, 19.85); puerta2.rotation.y = Math.PI; grupoSala.add(puerta2);
+        let puertaS = new THREE.Mesh(geomPuerta, materialPuerta);
+        puertaS.position.set(0, 5, 19.85); puertaS.rotation.y = Math.PI; grupoSala.add(puertaS);
 
         let puertaE = new THREE.Mesh(geomPuerta, materialPuerta);
         puertaE.position.set(-19.85, 5, 0); puertaE.rotation.y = Math.PI / 2; grupoSala.add(puertaE);
@@ -283,13 +281,22 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoSala);
     }
 
+    // Mapa modular simétrico
     crearSalaHexagonal(0, 0, true);
-    crearSalaHexagonal(0, -40, false);  
-    crearSalaHexagonal(0, 40, false);   
-    crearSalaHexagonal(-40, 0, false);  
-    crearSalaHexagonal(40, 0, false);   
+    crearSalaHexagonal(0, -40, false);   
+    crearSalaHexagonal(0, -80, false);   
+    crearSalaHexagonal(0, 40, false);    
+    crearSalaHexagonal(0, 80, false);    
+    crearSalaHexagonal(-40, 0, false);   
+    crearSalaHexagonal(-80, 0, false);   
+    crearSalaHexagonal(40, 0, false);    
+    crearSalaHexagonal(80, 0, false);    
+    crearSalaHexagonal(-40, -40, false); 
+    crearSalaHexagonal(40, -40, false);  
+    crearSalaHexagonal(-40, 40, false);  
+    crearSalaHexagonal(40, 40, false);   
 
-    // --- CÁPSULAS DE HIBERNACIÓN ---
+    // Cápsulas de hibernación
     const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x9ca6b0, metalness: 0.85, roughness: 0.2 });
     const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
     const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
@@ -322,7 +329,7 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoCapsula);
     }
 
-    // --- ESTRADA ---
+    // Estrada
     const grupoEstrada = new THREE.Group();
     const matTrajeEstrada = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.4 }); 
     const matCascoEstrada = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 });
@@ -341,88 +348,118 @@ function iniciarMotor3D(cantidadJugadores) {
     grupoEstrada.rotation.y = Math.PI / 4;
     scene.add(grupoEstrada);
 
-    // --- NUEVO MODELO 3D DE ASTRONAUTA PREMIUM (Estilo Cooperativo Indice Profesional) ---
+    // --- NUEVO MODELO 3D REALISTA DE ASTRONAUTA (Con cuello, brazos articulados, piernas y tanques) ---
     function crearModeloHumano(colorHex) {
         const grupo = new THREE.Group();
         
-        // Materiales con propiedades físicas de alta calidad (brillo y relieve metálico)
-        const materialTraje = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5, metalness: 0.1 });
+        const materialTraje = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5 });
+        const matArticulaciones = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
         const matCorreas = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-        const matTanque = new THREE.MeshStandardMaterial({ color: 0xe6e619, roughness: 0.2, metalness: 0.3 }); // Tanques amarillos brillantes
-        const matTapaTanque = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.8 });
-        const matCasco = new THREE.MeshStandardMaterial({ color: 0x1f232a, roughness: 0.3, metalness: 0.4 });
+        const matTanque = new THREE.MeshStandardMaterial({ color: 0xe6e619, roughness: 0.2, metalness: 0.3 });
+        const matTapaTanque = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 });
+        const matCasco = new THREE.MeshStandardMaterial({ color: 0x1f232a, roughness: 0.3 });
         const matBotasGuantes = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
 
-        // 1. Torso principal con volumen ergonómico
-        const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.05, 3.6, 16), materialTraje);
-        cuerpo.position.y = 1.9; 
-        grupo.add(cuerpo);
+        // 1. Torso ergonómico
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.8, 2.2, 16), materialTraje);
+        torso.position.y = 2.4;
+        grupo.add(torso);
 
-        // 2. Botas pesadas de astronauta
-        const botaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 1.0), matBotasGuantes);
-        botaIzq.position.set(-0.4, 0.3, 0.1);
+        // 2. Cuello
+        const cuello = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.4, 16), matArticulaciones);
+        cuello.position.y = 3.7;
+        grupo.add(cuello);
+
+        // 3. Brazos articulados (Hombros, brazos y manos)
+        const hombroIzq = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), materialTraje);
+        hombroIzq.position.set(-0.9, 3.2, 0);
+        grupo.add(hombroIzq);
+
+        const brazoIzq = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8, 12), materialTraje);
+        brazoIzq.position.set(-0.9, 2.1, 0);
+        grupo.add(brazoIzq);
+
+        const manoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), matBotasGuantes);
+        manoIzq.position.set(-0.9, 1.1, 0);
+        grupo.add(manoIzq);
+
+        const hombroDer = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), materialTraje);
+        hombroDer.position.set(0.9, 3.2, 0);
+        grupo.add(hombroDer);
+
+        const brazoDer = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8, 12), materialTraje);
+        brazoDer.position.set(0.9, 2.1, 0);
+        grupo.add(brazoDer);
+
+        const manoDer = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), matBotasGuantes);
+        manoDer.position.set(0.9, 1.1, 0);
+        grupo.add(manoDer);
+
+        // 4. Piernas articuladas y botas pesadas
+        const piernaIzq = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 1.8, 12), materialTraje);
+        piernaIzq.position.set(-0.35, 1.0, 0);
+        grupo.add(piernaIzq);
+
+        const botaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.45, 0.9), matBotasGuantes);
+        botaIzq.position.set(-0.35, 0.2, 0.1);
         grupo.add(botaIzq);
 
-        const botaDer = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 1.0), matBotasGuantes);
-        botaDer.position.set(0.4, 0.3, 0.1);
+        const piernaDer = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 1.8, 12), materialTraje);
+        piernaDer.position.set(0.35, 1.0, 0);
+        grupo.add(piernaDer);
+
+        const botaDer = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.45, 0.9), matBotasGuantes);
+        botaDer.position.set(0.35, 0.2, 0.1);
         grupo.add(botaDer);
 
-        // 3. Tanques de oxígeno traseros dobles (con relieve y proporciones reales)
-        const tanque1 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.0, 16), matTanque);
-        tanque1.position.set(-0.4, 2.1, -0.85);
-        tanque1.rotation.x = 0.08;
+        // 5. Tanques de oxígeno traseros
+        const tanque1 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.2, 16), matTanque);
+        tanque1.position.set(-0.35, 2.5, -0.75);
         grupo.add(tanque1);
 
-        const tapa1 = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.42, 0.25, 16), matTapaTanque);
-        tapa1.position.set(-0.4, 3.65, -0.92);
+        const tapa1 = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.35, 0.2, 16), matTapaTanque);
+        tapa1.position.set(-0.35, 3.65, -0.75);
         grupo.add(tapa1);
 
-        const tanque2 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.0, 16), matTanque);
-        tanque2.position.set(0.4, 2.1, -0.85);
-        tanque2.rotation.x = 0.08;
+        const tanque2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.2, 16), matTanque);
+        tanque2.position.set(0.35, 2.5, -0.75);
         grupo.add(tanque2);
 
-        const tapa2 = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.42, 0.25, 16), matTapaTanque);
-        tapa2.position.set(0.4, 3.65, -0.92);
+        const tapa2 = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.35, 0.2, 16), matTapaTanque);
+        tapa2.position.set(0.35, 3.65, -0.75);
         grupo.add(tapa2);
 
-        // 4. Correas y arneses cruzados en el pecho y espalda
-        const correa1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 0.08), matCorreas);
-        correa1.position.set(0, 2.5, -0.8);
-        correa1.rotation.z = 0.45;
+        // Correas
+        const correa1 = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.12, 0.08), matCorreas);
+        correa1.position.set(0, 2.8, -0.7);
+        correa1.rotation.z = 0.4;
         grupo.add(correa1);
 
-        const correa2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 0.08), matCorreas);
-        correa2.position.set(0, 2.5, -0.8);
-        correa2.rotation.z = -0.45;
-        grupo.add(correa2);
-
-        // 5. Casco robusto industrial
-        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), matCasco);
-        casco.position.y = 4.75; 
+        // 6. Casco y rostro expresivo
+        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.05, 24, 24), matCasco);
+        casco.position.y = 4.8;
         grupo.add(casco);
 
-        // 6. Ojos expresivos y boca dentro del visor
         const materialOjo = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
-        ojoIzq.position.set(-0.3, 4.85, -0.98);
+        const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), materialOjo);
+        ojoIzq.position.set(-0.28, 4.9, -0.92);
         grupo.add(ojoIzq);
 
-        const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
-        ojoDer.position.set(0.3, 4.85, -0.98);
+        const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), materialOjo);
+        ojoDer.position.set(0.28, 4.9, -0.92);
         grupo.add(ojoDer);
 
         const materialPupila = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
-        pupilaIzq.position.set(-0.3, 4.85, -1.1);
+        const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), materialPupila);
+        pupilaIzq.position.set(-0.28, 4.9, -1.02);
         grupo.add(pupilaIzq);
 
-        const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
-        pupilaDer.position.set(0.3, 4.85, -1.1);
+        const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), materialPupila);
+        pupilaDer.position.set(0.28, 4.9, -1.02);
         grupo.add(pupilaDer);
 
-        const boca = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.07, 0.1), materialPupila);
-        boca.position.set(0, 4.42, -1.02);
+        const boca = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.1), materialPupila);
+        boca.position.set(0, 4.45, -0.96);
         grupo.add(boca);
 
         return grupo;
@@ -500,8 +537,73 @@ function iniciarMotor3D(cantidadJugadores) {
         return false;
     }
 
+    // --- LOGICA DEL MINIMAPA (TECLA M) ---
+    const canvasMinimapa = document.getElementById('minimapa-canvas');
+    const ctxMinimapa = canvasMinimapa ? canvasMinimapa.getContext('2d') : null;
+    let minimapaVisible = false;
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'm') {
+            minimapaVisible = !minimapaVisible;
+            const contenedorMini = document.getElementById('contenedor-minimapa');
+            if (contenedorMini) contenedorMini.style.display = minimapaVisible ? 'block' : 'none';
+        }
+    });
+
+    function actualizarMinimapa(posicionesGlobales) {
+        if (!minimapaVisible || !ctxMinimapa) return;
+        ctxMinimapa.clearRect(0, 0, canvasMinimapa.width, canvasMinimapa.height);
+
+        // Fondo del radar
+        ctxMinimapa.fillStyle = "rgba(5, 15, 10, 0.9)";
+        ctxMinimapa.fillRect(0, 0, canvasMinimapa.width, canvasMinimapa.height);
+
+        // Dibujar las salas fijas del mapa (rejilla de centros)
+        const centrosSalas = [
+            {x: 0, z: 0, hib: true},
+            {x: 0, z: -40}, {x: 0, z: -80},
+            {x: 0, z: 40}, {x: 0, z: 80},
+            {x: -40, z: 0}, {x: -80, z: 0},
+            {x: 40, z: 0}, {x: 80, z: 0},
+            {x: -40, z: -40}, {x: 40, z: -40},
+            {x: -40, z: 40}, {x: 40, z: 40}
+        ];
+
+        let escala = 1.2; // Escala del mapa en el radar
+        let centroX = canvasMinimapa.width / 2;
+        let centroZ = canvasMinimapa.height / 2;
+
+        centrosSalas.forEach(sala => {
+            // Relativo a la posición actual del jugador principal
+            let relX = centroX + (sala.x - camera.position.x) * escala;
+            let relZ = centroZ + (sala.z - camera.position.z) * escala;
+
+            ctxMinimapa.strokeStyle = sala.hib ? "#00ffff" : "#336644";
+            ctxMinimapa.lineWidth = sala.hib ? 2 : 1;
+            ctxMinimapa.strokeRect(relX - 15, relZ - 15, 30, 30);
+        });
+
+        // Dibujar compañeros en el minimapa
+        for (let nombre in posicionesGlobales) {
+            let p = posicionesGlobales[nombre];
+            let relX = centroX + (p.x - camera.position.x) * escala;
+            let relZ = centroZ + (p.z - camera.position.z) * escala;
+
+            ctxMinimapa.fillStyle = (nombre === miNombre) ? "#33ff33" : "#ffcc00";
+            ctxMinimapa.beginPath();
+            ctxMinimapa.arc(relX, relZ, 4, 0, Math.PI * 2);
+            ctxMinimapa.fill();
+        }
+    }
+
     const direccion = new THREE.Vector3(); const derecha = new THREE.Vector3();
     let lastX = 0, lastZ = 0, lastYaw = 0; 
+    let cachePosiciones = {};
+    
+    db.ref('salas/' + miSalaActual + '/posiciones').on('value', (snap) => {
+        cachePosiciones = snap.val() || {};
+    });
+
     const raycaster = new THREE.Raycaster();
     const centroPantalla = new THREE.Vector2(0, 0);
 
@@ -521,8 +623,8 @@ function iniciarMotor3D(cantidadJugadores) {
         let testX = camera.position.x + movX;
         let testZ = camera.position.z + movZ;
 
-        if (testX < -58 || testX > 58) movX = 0;
-        if (testZ < -58 || testZ > 58) movZ = 0;
+        if (testX < -100 || testX > 100) movX = 0;
+        if (testZ < -100 || testZ > 100) movZ = 0;
 
         if (colisionaConAlguien(camera.position.x + movX, camera.position.z)) movX = 0;
         if (colisionaConAlguien(camera.position.x, camera.position.z + movZ)) movZ = 0;
@@ -547,6 +649,7 @@ function iniciarMotor3D(cantidadJugadores) {
             lastX = camera.position.x; lastZ = camera.position.z; lastYaw = yaw;
         }
 
+        actualizarMinimapa(cachePosiciones);
         renderer.render(scene, camera);
     }
     animar3D();
