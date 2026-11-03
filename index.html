@@ -308,7 +308,6 @@
                             setTimeout(() => tituloZona.style.display = 'none', 2000);
                         }, 4000); 
 
-                        // Contamos cuántos jugadores hay en total para pasarlo al generador 3D
                         let numJugadores = Object.keys(sala.jugadores).length;
                         iniciarMotor3D(numJugadores);
                     }
@@ -320,8 +319,8 @@
         function iniciarMotor3D(cantidadJugadores) {
             const contenedor = document.getElementById('tablero-juego');
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050508);
-            scene.fog = new THREE.Fog(0x050508, 15, 45);
+            scene.background = new THREE.Color(0x020204);
+            scene.fog = new THREE.Fog(0x020204, 15, 45);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -329,7 +328,7 @@
             contenedor.appendChild(renderer.domElement);
 
             // --- SUELO TEXTURIZADO ---
-            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x555555 });
+            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
             suelo.rotation.x = -Math.PI / 2; 
             scene.add(suelo);
@@ -387,8 +386,8 @@
             crearParedConPaneles(40, 15, -20, 7.5, 0, Math.PI / 2); // Este
             crearParedConPaneles(40, 15, 20, 7.5, 0, -Math.PI / 2); // Oeste
 
-            // --- ILUMINACIÓN POTENTE Y DINÁMICA ---
-            const ambientLight = new THREE.AmbientLight(0x445566, 1.2);
+            // --- ILUMINACIÓN MÁS TENUE Y CINEMATOGRÁFICA ---
+            const ambientLight = new THREE.AmbientLight(0x223344, 0.6); // Luz ambiental más baja y oscura
             scene.add(ambientLight);
 
             const posicionesFocos = [
@@ -401,10 +400,11 @@
                 const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 16), matViga);
                 focoBase.position.set(pos.x, 14.85, pos.z); scene.add(focoBase);
 
-                const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({color: 0x88ccff}));
                 focoLed.position.set(pos.x, 14.65, pos.z); scene.add(focoLed);
 
-                const luz = new THREE.PointLight(0xd9f2ff, 1.5, 30);
+                // Intensidad reducida a 0.8 para dar ese toque tenue que pediste
+                const luz = new THREE.PointLight(0x88bbff, 0.8, 30);
                 luz.position.set(pos.x, 14.0, pos.z); scene.add(luz);
             });
 
@@ -417,45 +417,44 @@
             const puertaE = new THREE.Mesh(geomPuerta, materialPuerta); puertaE.position.set(-19.85, 5, 0); puertaE.rotation.y = Math.PI / 2; scene.add(puertaE);
             const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
 
-            // --- CÁPSULAS DE HIBERNACIÓN DINÁMICAS (Basadas en la imagen y número de jugadores) ---
-            const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x8c96a0, metalness: 0.8, roughness: 0.2 });
-            const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x88ccff, transmission: 0.6, opacity: 0.8, transparent: true, roughness: 0.1, ior: 1.33 });
-            const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff }); // Anillo brillante superior e inferior
+            // --- CÁPSULAS DE HIBERNACIÓN AMPLIADAS Y DETALLADAS (Estilo Imagen) ---
+            const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
+            const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
+            const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-            // Calculamos el espacio para distribuirlas simétricamente en la pared Norte (ancho total 36 unidades)
             let espacioTotal = 32;
             let separacion = cantidadJugadores > 1 ? espacioTotal / (cantidadJugadores - 1) : 0;
             let inicioX = -espacioTotal / 2;
 
             for(let i = 0; i < cantidadJugadores; i++) {
                 let posX = cantidadJugadores === 1 ? 0 : inicioX + (i * separacion);
-                let posZ = -18.5;
+                let posZ = -17.5; // Ligeramente separadas de la pared para que luzcan imponentes
 
                 const grupoCapsula = new THREE.Group();
 
-                // 1. Base metálica inferior
-                let baseInferior = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.8, 32), matMetalInferior);
-                baseInferior.position.y = 0.4;
+                // 1. Base metálica inferior (Más grande y ancha)
+                let baseInferior = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 1.2, 32), matMetalInferior);
+                baseInferior.position.y = 0.6;
                 grupoCapsula.add(baseInferior);
 
                 // 2. Anillo de luz inferior
-                let luzInf = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.2, 32), matAnilloLuz);
-                luzInf.position.y = 0.85;
+                let luzInf = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
+                luzInf.position.y = 1.25;
                 grupoCapsula.add(luzInf);
 
-                // 3. Cuerpo de cristal con líquido criogénico (cilindro central)
-                let cilindroCristal = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 6.5, 32, 1, true), matCristalLiquido);
-                cilindroCristal.position.y = 4.3;
+                // 3. Cuerpo de cristal con líquido criogénico (Mucho más alto y ancho)
+                let cilindroCristal = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 10.0, 32, 1, true), matCristalLiquido);
+                cilindroCristal.position.y = 6.35;
                 grupoCapsula.add(cilindroCristal);
 
                 // 4. Anillo de luz superior
-                let luzSup = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.2, 32), matAnilloLuz);
-                luzSup.position.y = 7.75;
+                let luzSup = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
+                luzSup.position.y = 11.45;
                 grupoCapsula.add(luzSup);
 
                 // 5. Tapa metálica superior
-                let tapaSuperior = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.2, 0.9, 32), matMetalInferior);
-                tapaSuperior.position.y = 8.3;
+                let tapaSuperior = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.2, 1.3, 32), matMetalInferior);
+                tapaSuperior.position.y = 12.25;
                 grupoCapsula.add(tapaSuperior);
 
                 grupoCapsula.position.set(posX, 0, posZ);
@@ -562,7 +561,7 @@
                 let testZ = camera.position.z + movZ;
 
                 if (testX < -18 || testX > 18) movX = 0;
-                if (testZ < -17 || testZ > 18) movZ = 0;
+                if (testZ < -16 || testZ > 18) movZ = 0;
 
                 if (colisionaConAlguien(camera.position.x + movX, camera.position.z)) movX = 0;
                 if (colisionaConAlguien(camera.position.x, camera.position.z + movZ)) movZ = 0;
