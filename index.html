@@ -10,13 +10,11 @@
     
     <style>
         body {
-            /* Fondo fotográfico hiperrealista del espacio profundo */
             background-color: #000;
             background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            
             color: #33ff33;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
@@ -27,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* Lienzo transparente para la animación de estrellas */
         #fondo-espacial {
             position: fixed;
             top: 0;
@@ -38,7 +35,6 @@
             pointer-events: none;
         }
 
-        /* Scanlines del monitor antiguo */
         body::after {
             content: "";
             position: absolute;
@@ -94,15 +90,6 @@
             outline: none;
         }
 
-        input:focus {
-            box-shadow: 0 0 10px rgba(51, 255, 51, 0.4);
-            border-color: #33ff33;
-        }
-
-        input::placeholder {
-            color: rgba(51, 255, 51, 0.3);
-        }
-
         button {
             width: 100%;
             padding: 12px;
@@ -127,7 +114,6 @@
             font-size: 12px;
             color: rgba(51, 255, 51, 0.6);
             margin: 15px 0;
-            text-transform: uppercase;
         }
 
         #sala-espera { display: none; }
@@ -152,14 +138,7 @@
             background-color: rgba(0, 0, 0, 0.6);
         }
 
-        #lista-jugadores li {
-            padding: 5px 0;
-            font-size: 14px;
-        }
-        
-        #lista-jugadores li::before {
-            content: "> ";
-        }
+        #lista-jugadores li::before { content: "> "; }
     </style>
 </head>
 <body>
@@ -169,11 +148,8 @@
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
-        
         <button onclick="crearSala()">INICIAR PROTOCOLO (Crear)</button>
-        
         <div class="texto-secundario">--- O ACCEDE A UNA NAVE ---</div>
-        
         <input type="text" id="codigo-input" placeholder="CÓDIGO DE ENLACE" maxlength="5" autocomplete="off">
         <button onclick="unirseSala()">CONECTAR</button>
     </div>
@@ -182,15 +158,17 @@
         <h2>Protocolo Activo</h2>
         <p class="texto-secundario">CÓDIGO DE ENLACE TRANSMITIDO:</p>
         <div class="codigo-destacado" id="mostrar-codigo"></div>
-        
         <p class="texto-secundario" style="text-align: left; margin-bottom: 5px;">TRIPULACIÓN DETECTADA:</p>
         <ul id="lista-jugadores"></ul>
-        
         <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
     <script>
-        // --- ANIMACIÓN REALISTA DEL ESPACIO ---
+        // --- 1. CARGAR LA IMAGEN DEL ASTEROIDE ---
+        const imgAsteroide = new Image();
+        // Aquí pones el enlace de tu imagen PNG sin fondo. 
+        imgAsteroide.src = 'asteroide.com.png'; 
+
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
         
@@ -201,7 +179,6 @@
         window.addEventListener('resize', redimensionar);
         redimensionar();
 
-        // Generar estrellas parpadeantes
         const estrellas = [];
         for (let i = 0; i < 150; i++) {
             estrellas.push({
@@ -214,10 +191,12 @@
             });
         }
 
+        const asteroides = [];
+
         function dibujarEspacio() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Estrellas parpadeantes moviéndose lentamente
+            // Dibujar estrellas
             estrellas.forEach(e => {
                 e.opacidad += e.cambioOpacidad;
                 if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; }
@@ -229,20 +208,46 @@
                 ctx.fill();
                 
                 e.x -= e.velocidad;
-                if (e.x < 0) {
-                    e.x = canvas.width;
-                    e.y = Math.random() * canvas.height;
-                }
+                if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
             });
+
+            // Generar asteroides de imagen (solo si la imagen ya ha cargado)
+            if (imgAsteroide.complete && Math.random() < 0.008) {
+                asteroides.push({
+                    x: canvas.width + 150,
+                    y: Math.random() * canvas.height,
+                    velocidad: Math.random() * 1 + 0.3,
+                    tamaño: Math.random() * 150 + 80, // Imágenes más grandes
+                    rotacion: Math.random() * Math.PI * 2,
+                    velRotacion: (Math.random() - 0.5) * 0.02
+                });
+            }
+
+            // Dibujar los asteroides dinámicos
+            for (let i = asteroides.length - 1; i >= 0; i--) {
+                let obj = asteroides[i];
+                obj.x -= obj.velocidad;
+                obj.rotacion += obj.velRotacion;
+
+                ctx.save(); // Guarda el estado actual de la pantalla
+                
+                ctx.translate(obj.x, obj.y); // Mueve el centro de giro a la posición del asteroide
+                ctx.rotate(obj.rotacion); // Rota la pantalla
+                
+                // Dibuja la imagen. Le restamos la mitad de su tamaño en X e Y para que gire sobre su propio centro
+                ctx.drawImage(imgAsteroide, -obj.tamaño / 2, -obj.tamaño / 2, obj.tamaño, obj.tamaño);
+
+                ctx.restore(); // Restaura la pantalla para no afectar a los demás asteroides
+
+                if (obj.x < -300) asteroides.splice(i, 1);
+            }
 
             requestAnimationFrame(dibujarEspacio);
         }
         dibujarEspacio();
 
         // --- LÓGICA DE FIREBASE ---
-        const firebaseConfig = {
-            databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" 
-        };
+        const firebaseConfig = { databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let miSalaActual = "";
