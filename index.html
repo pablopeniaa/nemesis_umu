@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El título que aparecerá en Google -->
+    <title>Nemesis UMU - El Juego</title>
+    <!-- La descripción que aparece debajo del enlace en Google -->
+    <meta name="description" content="Juega a Nemesis UMU con tus amigos. Crea tu sala, comparte el código y entra en la partida.">
+    <!-- ... resto de tus scripts de Firebase y estilos ... -->
+</head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .contenedor {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 300px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px 0;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        .boton-secundario { background-color: #2ecc71; }
+        .boton-secundario:hover { background-color: #27ae60; }
+        
+        #sala-espera { display: none; }
+        .codigo-destacado {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e74c3c;
+            letter-spacing: 5px;
+            margin: 10px 0;
+        }
+        #lista-jugadores {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            text-align: left;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        #lista-jugadores li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        #lista-jugadores li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor" id="menu-principal">
+        <h2>Entrar al Juego</h2>
+        <input type="text" id="nombre-jugador" placeholder="Tu nombre" required>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <button onclick="crearSala()">Crear Nueva Sala</button>
+        <p style="margin: 15px 0; color: #7f8c8d;">o únete a una existente</p>
+        
+        <input type="text" id="codigo-input" placeholder="Código de 5 letras" maxlength="5">
+        <button class="boton-secundario" onclick="unirseSala()">Unirse a Sala</button>
+    </div>
+
+    <div class="contenedor" id="sala-espera">
+        <h2>Sala de Espera</h2>
+        <p>Código para invitar:</p>
+        <div class="codigo-destacado" id="mostrar-codigo"></div>
+        
+        <h3 style="margin-top: 20px; font-size: 16px;">Jugadores conectados:</h3>
+        <ul id="lista-jugadores">
+            <!-- Aquí aparecerán los jugadores mágicamente -->
+        </ul>
+        
+        <button style="margin-top: 20px; background-color: #f39c12;" onclick="empezarJuego()" id="btn-empezar" style="display:none;">Empezar Partida</button>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURACIÓN DE FIREBASE ---
+        // ¡CAMBIA ESTA URL POR LA DE TU PROYECTO!
+        const firebaseConfig = {
+            databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" 
+        };
+        
+        // Iniciamos la conexión
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. LÓGICA DEL JUEGO ---
+        let miSalaActual = "";
+
+        function generarCodigo() {
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let resultado = '';
+            for (let i = 0; i < 5; i++) {
+                resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return resultado;
+        }
+
+        // Esta función cambia la pantalla
+        function mostrarLobbyUI(codigo) {
+            document.getElementById('menu-principal').style.display = 'none';
+            document.getElementById('sala-espera').style.display = 'block';
+            document.getElementById('mostrar-codigo').innerText = codigo;
+        }
+
+        function crearSala() {
+            const nombre = document.getElementById('nombre-jugador').value;
+            if (!nombre) return alert("Escribe tu nombre.");
+
+            const codigo = generarCodigo();
+            miSalaActual = codigo;
+            
+            // Guardamos la sala en la nube
+            db.ref('salas/' + codigo).set({
+                creador: nombre,
+                jugadores: {
+                    [nombre]: true
+                }
+            });
+
+            mostrarLobbyUI(codigo);
+            escucharCambiosSala(codigo);
+        }
+
+        function unirseSala() {
+            const nombre = document.getElementById('nombre-jugador').value;
+            const codigo = document.getElementById('codigo-input').value.toUpperCase();
+            
+            if (!nombre) return alert("Escribe tu nombre.");
+            if (codigo.length !== 5) return alert("El código debe tener 5 letras.");
+
+            // Comprobamos si la sala existe en la nube
+            db.ref('salas/' + codigo).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    miSalaActual = codigo;
+                    // Añadimos al jugador a la sala
+                    db.ref('salas/' + codigo + '/jugadores').update({
+                        [nombre]: true
+                    });
+                    
+                    mostrarLobbyUI(codigo);
+                    escucharCambiosSala(codigo);
+                } else {
+                    alert("Esa sala no existe. Revisa el código.");
+                }
+            });
+        }
+
+        // La magia: escuchar en tiempo real quién entra
+        function escucharCambiosSala(codigo) {
+            db.ref('salas/' + codigo + '/jugadores').on('value', (snapshot) => {
+                const jugadores = snapshot.val();
+                const lista = document.getElementById('lista-jugadores');
+                
+                lista.innerHTML = ''; // Limpiamos la lista
+                
+                // Añadimos a cada jugador de la base de datos a la pantalla
+                for (let jugador in jugadores) {
+                    lista.innerHTML += `<li>👤 ${jugador}</li>`;
+                }
+            });
+        }
+        
+        function empezarJuego() {
+            alert("¡Aquí pondremos la lógica para empezar el juego de verdad!");
+        }
+    </script>
+</body>
+</html>
