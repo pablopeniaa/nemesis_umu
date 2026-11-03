@@ -88,6 +88,14 @@
             z-index: 101; pointer-events: none;
         }
 
+        /* Estilo para el nombre del cadáver al mirarlo */
+        #interaccion-ui {
+            position: absolute; top: 55%; left: 50%; transform: translateX(-50%);
+            color: #ff3333; font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.7);
+            padding: 5px 15px; border: 1px solid #ff3333; display: none; z-index: 101; pointer-events: none;
+            letter-spacing: 2px;
+        }
+
         /* Título Cinematográfico */
         #titulo-zona {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
@@ -140,6 +148,7 @@
         </div>
         
         <div id="mirilla"></div>
+        <div id="interaccion-ui">ESTRADA [TRIPULANTE CAÍDO]</div>
         <div id="tablero-juego"></div>
     </div>
 
@@ -387,7 +396,7 @@
             crearParedConPaneles(40, 15, 20, 7.5, 0, -Math.PI / 2); // Oeste
 
             // --- ILUMINACIÓN MÁS TENUE Y CINEMATOGRÁFICA ---
-            const ambientLight = new THREE.AmbientLight(0x223344, 0.6); // Luz ambiental más baja y oscura
+            const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
             scene.add(ambientLight);
 
             const posicionesFocos = [
@@ -403,7 +412,6 @@
                 const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({color: 0x88ccff}));
                 focoLed.position.set(pos.x, 14.65, pos.z); scene.add(focoLed);
 
-                // Intensidad reducida a 0.8 para dar ese toque tenue que pediste
                 const luz = new THREE.PointLight(0x88bbff, 0.8, 30);
                 luz.position.set(pos.x, 14.0, pos.z); scene.add(luz);
             });
@@ -417,7 +425,7 @@
             const puertaE = new THREE.Mesh(geomPuerta, materialPuerta); puertaE.position.set(-19.85, 5, 0); puertaE.rotation.y = Math.PI / 2; scene.add(puertaE);
             const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
 
-            // --- CÁPSULAS DE HIBERNACIÓN AMPLIADAS Y DETALLADAS (Estilo Imagen) ---
+            // --- CÁPSULAS DE HIBERNACIÓN AMPLIADAS ---
             const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
             const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
             const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
@@ -428,31 +436,26 @@
 
             for(let i = 0; i < cantidadJugadores; i++) {
                 let posX = cantidadJugadores === 1 ? 0 : inicioX + (i * separacion);
-                let posZ = -17.5; // Ligeramente separadas de la pared para que luzcan imponentes
+                let posZ = -17.5;
 
                 const grupoCapsula = new THREE.Group();
 
-                // 1. Base metálica inferior (Más grande y ancha)
                 let baseInferior = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 1.2, 32), matMetalInferior);
                 baseInferior.position.y = 0.6;
                 grupoCapsula.add(baseInferior);
 
-                // 2. Anillo de luz inferior
                 let luzInf = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
                 luzInf.position.y = 1.25;
                 grupoCapsula.add(luzInf);
 
-                // 3. Cuerpo de cristal con líquido criogénico (Mucho más alto y ancho)
                 let cilindroCristal = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 10.0, 32, 1, true), matCristalLiquido);
                 cilindroCristal.position.y = 6.35;
                 grupoCapsula.add(cilindroCristal);
 
-                // 4. Anillo de luz superior
                 let luzSup = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
                 luzSup.position.y = 11.45;
                 grupoCapsula.add(luzSup);
 
-                // 5. Tapa metálica superior
                 let tapaSuperior = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.2, 1.3, 32), matMetalInferior);
                 tapaSuperior.position.y = 12.25;
                 grupoCapsula.add(tapaSuperior);
@@ -461,8 +464,35 @@
                 scene.add(grupoCapsula);
             }
 
+            // --- ASTRONAUTA MUERTO: ESTRADA (En el centro de la sala) ---
+            const grupoEstrada = new THREE.Group();
+            const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); // Traje rojo castigado
+            const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
+            const matVisorRotto = new THREE.MeshLambertMaterial({ color: 0x050505 });
+
+            // Cuerpo tumbado
+            let cuerpoEstrada = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.5, 16), matTrajeEstrada);
+            cuerpoEstrada.rotation.z = Math.PI / 2; // Tumbado horizontal
+            cuerpoEstrada.position.set(0, 1.2, 0);
+            grupoEstrada.add(cuerpoEstrada);
+
+            // Casco
+            let cascoEstrada = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), matCascoEstrada);
+            cascoEstrada.position.set(2.0, 1.2, 0);
+            grupoEstrada.add(cascoEstrada);
+
+            // Visor
+            let visorEstrada = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 1.2), matVisorRotto);
+            visorEstrada.position.set(2.8, 1.2, 0);
+            grupoEstrada.add(visorEstrada);
+
+            // Posicionamos a Estrada en el centro exacto de la sala (0, 0, 0) y le damos una ligera rotación caótica
+            grupoEstrada.position.set(0, 0, 0);
+            grupoEstrada.rotation.y = Math.PI / 4;
+            scene.add(grupoEstrada);
+
             // --- JUGADOR Y CONTROLES ---
-            camera.position.set(0, 6, 0); 
+            camera.position.set(0, 6, 5); 
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
@@ -543,6 +573,8 @@
 
             const direccion = new THREE.Vector3(); const derecha = new THREE.Vector3();
             let lastX = 0, lastZ = 0, lastYaw = 0; 
+            const raycaster = new THREE.Raycaster();
+            const centroPantalla = new THREE.Vector2(0, 0); // Mirilla central
 
             function animar3D() {
                 requestAnimationFrame(animar3D);
@@ -568,6 +600,18 @@
 
                 camera.position.x += movX;
                 camera.position.z += movZ;
+
+                // --- SISTEMA DE INTERACCIÓN (RAYCAST A ESTRADA) ---
+                raycaster.setFromCamera(centroPantalla, camera);
+                // Comprobamos si la mirilla apunta al grupo de Estrada y si estamos a menos de 4 unidades de distancia
+                const intersects = raycaster.intersectObjects(grupoEstrada.children, true);
+                const uiInteraccion = document.getElementById('interaccion-ui');
+                
+                if (intersects.length > 0 && intersects[0].distance < 6.0) {
+                    uiInteraccion.style.display = 'block';
+                } else {
+                    uiInteraccion.style.display = 'none';
+                }
 
                 if (Math.abs(camera.position.x - lastX) > 0.05 || Math.abs(camera.position.z - lastZ) > 0.05 || Math.abs(yaw - lastYaw) > 0.05) {
                     db.ref('salas/' + miSalaActual + '/posiciones/' + miNombre).set({
