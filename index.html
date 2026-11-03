@@ -88,7 +88,6 @@
             z-index: 101; pointer-events: none;
         }
 
-        /* Estilo para el nombre del cadáver al mirarlo */
         #interaccion-ui {
             position: absolute; top: 55%; left: 50%; transform: translateX(-50%);
             color: #ff3333; font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.7);
@@ -464,35 +463,37 @@
                 scene.add(grupoCapsula);
             }
 
-            // --- ASTRONAUTA MUERTO: ESTRADA (En el centro de la sala) ---
+            // --- ASTRONAUTA MUERTO: ESTRADA ---
             const grupoEstrada = new THREE.Group();
-            const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); // Traje rojo castigado
+            const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); 
             const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
             const matVisorRotto = new THREE.MeshLambertMaterial({ color: 0x050505 });
 
-            // Cuerpo tumbado
             let cuerpoEstrada = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.5, 16), matTrajeEstrada);
-            cuerpoEstrada.rotation.z = Math.PI / 2; // Tumbado horizontal
+            cuerpoEstrada.rotation.z = Math.PI / 2; 
             cuerpoEstrada.position.set(0, 1.2, 0);
             grupoEstrada.add(cuerpoEstrada);
 
-            // Casco
             let cascoEstrada = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), matCascoEstrada);
             cascoEstrada.position.set(2.0, 1.2, 0);
             grupoEstrada.add(cascoEstrada);
 
-            // Visor
             let visorEstrada = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 1.2), matVisorRotto);
             visorEstrada.position.set(2.8, 1.2, 0);
             grupoEstrada.add(visorEstrada);
 
-            // Posicionamos a Estrada en el centro exacto de la sala (0, 0, 0) y le damos una ligera rotación caótica
             grupoEstrada.position.set(0, 0, 0);
             grupoEstrada.rotation.y = Math.PI / 4;
             scene.add(grupoEstrada);
 
-            // --- JUGADOR Y CONTROLES ---
-            camera.position.set(0, 6, 5); 
+            // --- POSICIÓN INICIAL ALEATORIA PARA EVITAR EL BUG DE APARICIÓN ---
+            // Generamos un punto aleatorio seguro alejado del centro y de las paredes
+            const anguloAleatorio = Math.random() * Math.PI * 2;
+            const distanciaAleatoria = 6 + Math.random() * 4; // Entre 6 y 10 metros del centro
+            const inicioX = Math.cos(anguloAleatorio) * distanciaAleatoria;
+            const inicioZ = Math.sin(anguloAleatorio) * distanciaAleatoria;
+
+            camera.position.set(inicioX, 6, inicioZ); 
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
@@ -574,7 +575,7 @@
             const direccion = new THREE.Vector3(); const derecha = new THREE.Vector3();
             let lastX = 0, lastZ = 0, lastYaw = 0; 
             const raycaster = new THREE.Raycaster();
-            const centroPantalla = new THREE.Vector2(0, 0); // Mirilla central
+            const centroPantalla = new THREE.Vector2(0, 0);
 
             function animar3D() {
                 requestAnimationFrame(animar3D);
@@ -601,9 +602,7 @@
                 camera.position.x += movX;
                 camera.position.z += movZ;
 
-                // --- SISTEMA DE INTERACCIÓN (RAYCAST A ESTRADA) ---
                 raycaster.setFromCamera(centroPantalla, camera);
-                // Comprobamos si la mirilla apunta al grupo de Estrada y si estamos a menos de 4 unidades de distancia
                 const intersects = raycaster.intersectObjects(grupoEstrada.children, true);
                 const uiInteraccion = document.getElementById('interaccion-ui');
                 
