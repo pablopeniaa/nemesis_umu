@@ -10,13 +10,7 @@
     
     <style>
         body {
-            /* Fondo del espacio exterior con estrellas */
             background-color: #000;
-            background-image: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?q=80&w=2000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            
             color: #33ff33;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
@@ -24,19 +18,30 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden; /* Evita barras de desplazamiento */
         }
 
-        /* Efecto de monitor por encima de toda la pantalla */
+        /* Lienzo donde dibujaremos el espacio */
+        #fondo-espacial {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Efecto de monitor antiguo por encima de todo */
         body::after {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.03) 2px, rgba(51, 255, 51, 0.03) 4px);
-            pointer-events: none; /* Para que no moleste al hacer clic */
+            pointer-events: none;
+            z-index: 20;
         }
 
         .contenedor {
-            /* Hacemos la consola ligeramente transparente para ver el espacio detrás */
             background-color: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(3px);
             padding: 30px;
@@ -48,7 +53,6 @@
             z-index: 10;
         }
 
-        /* Adorno estilo Weyland-Yutani */
         .contenedor::before {
             content: "SISTEMA MU-TH-UR 6000";
             position: absolute;
@@ -153,6 +157,9 @@
 </head>
 <body>
 
+    <!-- Lienzo animado para el espacio -->
+    <canvas id="fondo-espacial"></canvas>
+
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
@@ -179,7 +186,104 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN DE FIREBASE ---
+        // --- ANIMACIÓN DEL ESPACIO ---
+        const canvas = document.getElementById('fondo-espacial');
+        const ctx = canvas.getContext('2d');
+        
+        function redimensionar() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', redimensionar);
+        redimensionar();
+
+        // Crear estrellas
+        const estrellas = [];
+        for (let i = 0; i < 200; i++) {
+            estrellas.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radio: Math.random() * 1.5,
+                velocidad: Math.random() * 0.5 + 0.1 // Efecto de profundidad
+            });
+        }
+
+        const objetosEspaciales = [];
+
+        function dibujarEspacio() {
+            // Limpiar pantalla
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Mover y dibujar estrellas
+            ctx.fillStyle = '#ffffff';
+            estrellas.forEach(estrella => {
+                ctx.beginPath();
+                ctx.arc(estrella.x, estrella.y, estrella.radio, 0, Math.PI * 2);
+                ctx.fill();
+                estrella.x -= estrella.velocidad;
+                if (estrella.x < 0) {
+                    estrella.x = canvas.width;
+                    estrella.y = Math.random() * canvas.height;
+                }
+            });
+
+            // Probabilidad de generar un asteroide o nave (1% por fotograma)
+            if (Math.random() < 0.01) {
+                const esNave = Math.random() > 0.8; // 20% naves, 80% asteroides
+                objetosEspaciales.push({
+                    tipo: esNave ? 'nave' : 'asteroide',
+                    x: canvas.width + 50,
+                    y: Math.random() * canvas.height,
+                    velocidad: esNave ? Math.random() * 2 + 2 : Math.random() * 1 + 0.5,
+                    tamaño: esNave ? 12 : Math.random() * 15 + 8
+                });
+            }
+
+            // Dibujar y mover asteroides/naves
+            for (let i = objetosEspaciales.length - 1; i >= 0; i--) {
+                let obj = objetosEspaciales[i];
+                obj.x -= obj.velocidad;
+
+                if (obj.tipo === 'asteroide') {
+                    // Cuerpo del asteroide
+                    ctx.fillStyle = '#444';
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.tamaño, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Cráter para darle textura
+                    ctx.fillStyle = '#222';
+                    ctx.beginPath();
+                    ctx.arc(obj.x - obj.tamaño/3, obj.y - obj.tamaño/3, obj.tamaño/3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Nave (Triángulo apuntando a la izquierda)
+                    ctx.fillStyle = '#778899';
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x - obj.tamaño, obj.y);
+                    ctx.lineTo(obj.x + obj.tamaño, obj.y - obj.tamaño/2);
+                    ctx.lineTo(obj.x + obj.tamaño, obj.y + obj.tamaño/2);
+                    ctx.fill();
+                    // Propulsor de fuego
+                    ctx.fillStyle = '#ff5500';
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x + obj.tamaño, obj.y - obj.tamaño/4);
+                    ctx.lineTo(obj.x + obj.tamaño + obj.tamaño/1.5, obj.y);
+                    ctx.lineTo(obj.x + obj.tamaño, obj.y + obj.tamaño/4);
+                    ctx.fill();
+                }
+
+                // Eliminar objeto si sale de la pantalla
+                if (obj.x < -100) {
+                    objetosEspaciales.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(dibujarEspacio);
+        }
+        dibujarEspacio();
+
+        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" 
         };
@@ -187,7 +291,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- 2. LÓGICA DEL JUEGO ---
+        // --- LÓGICA DEL JUEGO ---
         let miSalaActual = "";
 
         function generarCodigo() {
