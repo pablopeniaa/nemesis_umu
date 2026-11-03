@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nemesis UMU - Terminal</title>
     
+    <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    
+    <!-- MOTOR 3D (Three.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <style>
         body {
@@ -26,15 +30,11 @@
         }
 
         #fondo-espacial {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
         }
 
         body::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.04) 2px, rgba(51, 255, 51, 0.04) 4px);
             pointer-events: none; z-index: 20;
         }
@@ -45,59 +45,51 @@
             padding: 30px;
             border: 1px solid rgba(51, 255, 51, 0.6);
             box-shadow: 0 0 25px rgba(51, 255, 51, 0.2), inset 0 0 15px rgba(51, 255, 51, 0.1);
-            text-align: center;
-            width: 320px;
-            position: relative;
-            z-index: 10;
+            text-align: center; width: 320px; position: relative; z-index: 10;
         }
 
         .contenedor::before {
-            content: "SISTEMA MU-TH-UR 6000";
-            position: absolute; top: -10px; left: 10px;
-            background: #000; padding: 0 10px;
-            font-size: 12px; color: #33ff33; border: 1px solid #33ff33;
+            content: "SISTEMA MU-TH-UR 6000"; position: absolute; top: -10px; left: 10px;
+            background: #000; padding: 0 10px; font-size: 12px; color: #33ff33; border: 1px solid #33ff33;
         }
 
         h2 {
-            text-transform: uppercase; letter-spacing: 2px;
-            font-weight: normal; border-bottom: 1px dashed #33ff33;
-            padding-bottom: 10px; margin-top: 5px;
+            text-transform: uppercase; letter-spacing: 2px; font-weight: normal; 
+            border-bottom: 1px dashed #33ff33; padding-bottom: 10px; margin-top: 5px;
         }
 
         input {
-            width: 90%; padding: 10px; margin: 10px 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(51, 255, 51, 0.5);
-            color: #33ff33; font-family: 'Courier New', Courier, monospace;
-            font-size: 16px; box-sizing: border-box; outline: none;
+            width: 90%; padding: 10px; margin: 10px 0; background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(51, 255, 51, 0.5); color: #33ff33; 
+            font-family: 'Courier New', Courier, monospace; font-size: 16px; box-sizing: border-box; outline: none;
         }
 
         button {
-            width: 100%; padding: 12px;
-            background-color: #000; color: #33ff33;
-            border: 1px solid #33ff33;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px; font-weight: bold;
-            cursor: pointer; margin: 10px 0;
-            text-transform: uppercase; transition: all 0.2s;
+            width: 100%; padding: 12px; background-color: #000; color: #33ff33;
+            border: 1px solid #33ff33; font-family: 'Courier New', Courier, monospace;
+            font-size: 16px; font-weight: bold; cursor: pointer; margin: 10px 0; text-transform: uppercase; transition: all 0.2s;
         }
 
-        button:hover {
-            background-color: rgba(51, 255, 51, 0.2);
-            box-shadow: 0 0 15px rgba(51, 255, 51, 0.5);
-        }
+        button:hover { background-color: rgba(51, 255, 51, 0.2); box-shadow: 0 0 15px rgba(51, 255, 51, 0.5); }
 
         .texto-secundario { font-size: 12px; color: rgba(51, 255, 51, 0.6); margin: 15px 0; }
         .codigo-destacado { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 12px #33ff33; letter-spacing: 8px; margin: 15px 0; }
         #lista-jugadores { list-style: none; padding: 0; margin-top: 15px; text-align: left; border: 1px solid rgba(51, 255, 51, 0.3); padding: 10px; min-height: 100px; background-color: rgba(0, 0, 0, 0.6); }
         #lista-jugadores li::before { content: "> "; }
+
+        /* Contenedor especial para el Canvas 3D */
+        #pantalla-juego {
+            width: 90vw; height: 90vh; max-width: 1200px; padding: 15px;
+        }
+        #tablero-juego {
+            width: 100%; height: calc(100% - 60px); margin-top: 10px; border: 1px solid #33ff33; background-color: #050505;
+        }
     </style>
 </head>
 <body>
 
     <canvas id="fondo-espacial"></canvas>
 
-    <!-- MENÚ PRINCIPAL -->
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
@@ -107,7 +99,6 @@
         <button onclick="unirseSala()">CONECTAR</button>
     </div>
 
-    <!-- SALA DE ESPERA -->
     <div class="contenedor" id="sala-espera" style="display: none;">
         <h2>Protocolo Activo</h2>
         <p class="texto-secundario">CÓDIGO DE ENLACE TRANSMITIDO:</p>
@@ -117,210 +108,150 @@
         <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar" style="display:none;">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
-    <!-- NUEVO: PANTALLA DE SELECCIÓN DE PERSONAJE -->
     <div class="contenedor" id="pantalla-seleccion" style="display: none;">
         <h2>Asignación de Roles</h2>
-        <div id="area-seleccion" style="margin-top: 20px;">
-            <!-- Aquí se inyectan los botones o el texto de espera -->
-        </div>
-        <div id="resumen-elecciones" style="margin-top: 20px; font-size: 12px; text-align: left; border-top: 1px dashed #33ff33; padding-top: 10px;">
-            <!-- Aquí veremos qué ha elegido cada uno -->
-        </div>
+        <div id="area-seleccion" style="margin-top: 20px;"></div>
+        <div id="resumen-elecciones" style="margin-top: 20px; font-size: 12px; text-align: left; border-top: 1px dashed #33ff33; padding-top: 10px;"></div>
     </div>
 
-    <!-- PANTALLA DE JUEGO -->
-    <div class="contenedor" id="pantalla-juego" style="display: none; width: 80%; height: 80vh; max-width: 800px;">
-        <h2>Nave Nostromo - Sector de Carga</h2>
-        <p class="texto-secundario">SISTEMAS DE SOPORTE VITAL: EN LÍNEA</p>
-        <div id="tablero-juego" style="border: 1px solid rgba(51, 255, 51, 0.6); height: 60vh; margin-top: 20px; position: relative; background-color: rgba(0, 0, 0, 0.8);">
-            <!-- Mapa del juego -->
-        </div>
+    <div class="contenedor" id="pantalla-juego" style="display: none;">
+        <h2 style="margin: 0;">Nave Nostromo - Sector 3D</h2>
+        <p class="texto-secundario" style="margin: 5px 0;">SISTEMAS DE MOVIMIENTO (WASD): EN LÍNEA</p>
+        <div id="tablero-juego"></div>
     </div>
 
     <script>
-        // --- ANIMACIÓN DEL ESPACIO ---
+        // --- ANIMACIÓN DEL ESPACIO (Fondo 2D) ---
         const imgAsteroide = new Image();
         imgAsteroide.src = 'asteroide.com.png'; 
-
-        const canvas = document.getElementById('fondo-espacial');
-        const ctx = canvas.getContext('2d');
+        const canvasFondo = document.getElementById('fondo-espacial');
+        const ctxFondo = canvasFondo.getContext('2d');
         
-        function redimensionar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', redimensionar); redimensionar();
+        function redimensionarFondo() { canvasFondo.width = window.innerWidth; canvasFondo.height = window.innerHeight; }
+        window.addEventListener('resize', redimensionarFondo); redimensionarFondo();
 
         const estrellas = [];
         for (let i = 0; i < 150; i++) {
-            estrellas.push({
-                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                radio: Math.random() * 1.2 + 0.3, velocidad: Math.random() * 0.15 + 0.05,
-                opacidad: Math.random(), cambioOpacidad: (Math.random() * 0.01 + 0.005) * (Math.random() < 0.5 ? 1 : -1)
-            });
+            estrellas.push({ x: Math.random() * canvasFondo.width, y: Math.random() * canvasFondo.height, radio: Math.random() * 1.2 + 0.3, velocidad: Math.random() * 0.15 + 0.05, opacidad: Math.random(), cambioOpacidad: (Math.random() * 0.01 + 0.005) * (Math.random() < 0.5 ? 1 : -1) });
         }
         const asteroides = [];
 
         function dibujarEspacio() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctxFondo.clearRect(0, 0, canvasFondo.width, canvasFondo.height);
             estrellas.forEach(e => {
-                e.opacidad += e.cambioOpacidad;
-                if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; }
-                if(e.opacidad >= 1) { e.opacidad = 1; e.cambioOpacidad *= -1; }
-                ctx.fillStyle = `rgba(255, 255, 255, ${e.opacidad})`;
-                ctx.beginPath(); ctx.arc(e.x, e.y, e.radio, 0, Math.PI * 2); ctx.fill();
-                e.x -= e.velocidad; if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
+                e.opacidad += e.cambioOpacidad; if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; } if(e.opacidad >= 1) { e.opacidad = 1; e.cambioOpacidad *= -1; }
+                ctxFondo.fillStyle = `rgba(255, 255, 255, ${e.opacidad})`; ctxFondo.beginPath(); ctxFondo.arc(e.x, e.y, e.radio, 0, Math.PI * 2); ctxFondo.fill();
+                e.x -= e.velocidad; if (e.x < 0) { e.x = canvasFondo.width; e.y = Math.random() * canvasFondo.height; }
             });
 
             if (imgAsteroide.complete && Math.random() < 0.05) {
-                asteroides.push({
-                    x: canvas.width + 150, y: Math.random() * canvas.height,
-                    velocidad: Math.random() * 1 + 0.3, tamaño: Math.random() * 150 + 80,
-                    rotacion: Math.random() * Math.PI * 2, velRotacion: (Math.random() - 0.5) * 0.02
-                });
+                asteroides.push({ x: canvasFondo.width + 150, y: Math.random() * canvasFondo.height, velocidad: Math.random() * 1 + 0.3, tamaño: Math.random() * 150 + 80, rotacion: Math.random() * Math.PI * 2, velRotacion: (Math.random() - 0.5) * 0.02 });
             }
 
             for (let i = asteroides.length - 1; i >= 0; i--) {
-                let obj = asteroides[i];
-                obj.x -= obj.velocidad; obj.rotacion += obj.velRotacion;
-                ctx.save(); ctx.translate(obj.x, obj.y); ctx.rotate(obj.rotacion);
-                ctx.drawImage(imgAsteroide, -obj.tamaño / 2, -obj.tamaño / 2, obj.tamaño, obj.tamaño);
-                ctx.restore();
+                let obj = asteroides[i]; obj.x -= obj.velocidad; obj.rotacion += obj.velRotacion;
+                ctxFondo.save(); ctxFondo.translate(obj.x, obj.y); ctxFondo.rotate(obj.rotacion);
+                ctxFondo.drawImage(imgAsteroide, -obj.tamaño / 2, -obj.tamaño / 2, obj.tamaño, obj.tamaño); ctxFondo.restore();
                 if (obj.x < -300) asteroides.splice(i, 1);
             }
             requestAnimationFrame(dibujarEspacio);
         }
         dibujarEspacio();
 
-        // --- LÓGICA DE FIREBASE Y JUEGO ---
+        // --- LÓGICA DE FIREBASE ---
         const firebaseConfig = { databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
         let miSalaActual = "";
-        let miNombre = ""; // Guardamos quién somos localmente
+        let miNombre = ""; 
+        let miPersonajeAsignado = ""; // Guardaremos el rol elegido aquí
 
         const coloresPersonajes = {
-            "Soldado": "#ff3333",    // Rojo
-            "Capitán": "#3366ff",    // Azul
-            "Explorador": "#9933ff", // Morado
-            "Ingeniero": "#ff9933",  // Naranja
-            "Científico": "#aaaaaa", // Gris
-            "Piloto": "#33ff33"      // Verde
+            "Soldado": "#ff3333", "Capitán": "#3366ff", "Explorador": "#9933ff",
+            "Ingeniero": "#ff9933", "Científico": "#aaaaaa", "Piloto": "#33ff33"
         };
 
         function generarCodigo() {
-            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let resultado = '';
-            for (let i = 0; i < 5; i++) resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-            return resultado;
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let res = '';
+            for (let i = 0; i < 5; i++) res += caracteres.charAt(Math.floor(Math.random() * caracteres.length)); return res;
         }
 
         function crearSala() {
             miNombre = document.getElementById('nombre-jugador').value.trim();
             if (!miNombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
-            
-            const codigo = generarCodigo();
-            miSalaActual = codigo;
-            
-            db.ref('salas/' + codigo).set({ 
-                creador: miNombre, 
-                estado: 'esperando',
-                jugadores: { [miNombre]: "Sin asignar" } 
-            });
-            
+            const codigo = generarCodigo(); miSalaActual = codigo;
+            db.ref('salas/' + codigo).set({ creador: miNombre, estado: 'esperando', jugadores: { [miNombre]: "Sin asignar" } });
             document.getElementById('menu-principal').style.display = 'none';
             document.getElementById('sala-espera').style.display = 'block';
             document.getElementById('mostrar-codigo').innerText = codigo;
-            document.getElementById('btn-empezar').style.display = 'block'; // Solo el creador ve el botón
+            document.getElementById('btn-empezar').style.display = 'block'; 
             escucharCambiosSala(codigo);
         }
 
         function unirseSala() {
             miNombre = document.getElementById('nombre-jugador').value.trim();
             const codigo = document.getElementById('codigo-input').value.toUpperCase();
-            if (!miNombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
-            if (codigo.length !== 5) return alert("ERROR: CÓDIGO INVÁLIDO.");
-            
+            if (!miNombre || codigo.length !== 5) return alert("ERROR EN CREDENCIALES.");
             db.ref('salas/' + codigo).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     miSalaActual = codigo;
                     db.ref('salas/' + codigo + '/jugadores').update({ [miNombre]: "Sin asignar" });
-                    
                     document.getElementById('menu-principal').style.display = 'none';
                     document.getElementById('sala-espera').style.display = 'block';
                     document.getElementById('mostrar-codigo').innerText = codigo;
-                    document.getElementById('btn-empezar').style.display = 'none'; // Invitados no ven el botón
+                    document.getElementById('btn-empezar').style.display = 'none'; 
                     escucharCambiosSala(codigo);
-                } else alert("ERROR: NAVE NO ENCONTRADA.");
+                } else alert("NAVE NO ENCONTRADA.");
             });
         }
 
         function empezarJuego() {
             db.ref('salas/' + miSalaActual + '/jugadores').once('value').then((snapshot) => {
-                const listaJugadores = Object.keys(snapshot.val());
-                let disponibles = ["Soldado", "Capitán", "Explorador", "Ingeniero", "Científico", "Piloto"];
-                
-                // Desordenamos la lista de personajes
-                disponibles = disponibles.sort(() => Math.random() - 0.5);
-                // Sacamos los 2 primeros para el primer turno
-                const opcionesTurno1 = disponibles.splice(0, 2);
-
+                const lista = Object.keys(snapshot.val());
+                let disp = ["Soldado", "Capitán", "Explorador", "Ingeniero", "Científico", "Piloto"].sort(() => Math.random() - 0.5);
                 db.ref('salas/' + miSalaActual).update({
                     estado: 'seleccion',
-                    seleccion: {
-                        orden: listaJugadores, // El orden en el que elegirán
-                        turnoActual: 0,
-                        personajesDisponibles: disponibles,
-                        opcionesActuales: opcionesTurno1
-                    }
+                    seleccion: { orden: lista, turnoActual: 0, personajesDisponibles: disp, opcionesActuales: disp.splice(0, 2) }
                 });
             });
         }
 
-        function seleccionarPersonaje(personajeElegido) {
+        function seleccionarPersonaje(personaje) {
+            miPersonajeAsignado = personaje; // Guardo localmente mi personaje para pasárselo al 3D
             db.ref('salas/' + miSalaActual + '/seleccion').once('value').then((snapshot) => {
                 let sel = snapshot.val();
+                db.ref('salas/' + miSalaActual + '/jugadores').update({ [miNombre]: personaje });
                 
-                // 1. Asignamos el personaje al jugador en la base de datos
-                db.ref('salas/' + miSalaActual + '/jugadores').update({ [miNombre]: personajeElegido });
-
-                // 2. Metemos la opción que descartó de vuelta al saco
-                let descartado = sel.opcionesActuales.find(p => p !== personajeElegido);
+                let descartado = sel.opcionesActuales.find(p => p !== personaje);
                 if(descartado) sel.personajesDisponibles.push(descartado);
-
-                // 3. Preparamos el siguiente turno
-                let sigTurno = sel.turnoActual + 1;
                 
+                let sigTurno = sel.turnoActual + 1;
                 if (sigTurno >= sel.orden.length) {
-                    // Si ya han elegido todos, pasamos al juego real
                     db.ref('salas/' + miSalaActual).update({ estado: 'jugando' });
                 } else {
-                    // Sacamos 2 opciones nuevas para el siguiente jugador
                     sel.personajesDisponibles = sel.personajesDisponibles.sort(() => Math.random() - 0.5);
-                    let nuevasOpciones = sel.personajesDisponibles.splice(0, 2);
-
-                    db.ref('salas/' + miSalaActual + '/seleccion').update({
-                        turnoActual: sigTurno,
-                        personajesDisponibles: sel.personajesDisponibles,
-                        opcionesActuales: nuevasOpciones
-                    });
+                    db.ref('salas/' + miSalaActual + '/seleccion').update({ turnoActual: sigTurno, personajesDisponibles: sel.personajesDisponibles, opcionesActuales: sel.personajesDisponibles.splice(0, 2) });
                 }
             });
         }
+
+        let motor3DIniciado = false; // Control para iniciar el 3D solo una vez
 
         function escucharCambiosSala(codigo) {
             db.ref('salas/' + codigo).on('value', (snapshot) => {
                 const sala = snapshot.val();
                 if(!sala) return;
 
-                // Actualizar la lista de jugadores en el lobby
-                const lista = document.getElementById('lista-jugadores');
-                lista.innerHTML = ''; 
+                // Actualizar lista
+                const lista = document.getElementById('lista-jugadores'); lista.innerHTML = ''; 
                 for (let j in sala.jugadores) {
                     let rol = sala.jugadores[j] !== "Sin asignar" ? ` - <span style="color:${coloresPersonajes[sala.jugadores[j]]}">${sala.jugadores[j]}</span>` : '';
                     lista.innerHTML += `<li>${j}${rol}</li>`;
                 }
 
-                // CONTROL DE PANTALLAS SEGÚN EL ESTADO
                 if (sala.estado === 'esperando') {
-                    // Estamos en el lobby
+                    // Lobby normal
                 } 
                 else if (sala.estado === 'seleccion') {
                     document.getElementById('sala-espera').style.display = 'none';
@@ -331,30 +262,117 @@
                     const area = document.getElementById('area-seleccion');
 
                     if (jugadorTurno === miNombre) {
-                        // ES MI TURNO
-                        area.innerHTML = `<p style="color: #fff;">SISTEMA: REQUIERE TU CONFIRMACIÓN DE ROL.</p>`;
+                        area.innerHTML = `<p style="color: #fff;">REQUIERE TU CONFIRMACIÓN DE ROL.</p>`;
                         sel.opcionesActuales.forEach(p => {
                             area.innerHTML += `<button style="color: ${coloresPersonajes[p]}; border-color: ${coloresPersonajes[p]};" onclick="seleccionarPersonaje('${p}')">${p}</button>`;
                         });
                     } else {
-                        // TURNO DE OTRO
                         area.innerHTML = `<p class="texto-secundario" style="font-size: 16px; border: 1px solid rgba(51,255,51,0.3); padding: 20px;">ESPERANDO A QUE <b>${jugadorTurno}</b> ELIJA SU ROL...</p>`;
                     }
                     
-                    // Mostrar quién tiene qué
                     const resumen = document.getElementById('resumen-elecciones');
                     resumen.innerHTML = "<b>ESTADO DE LA TRIPULACIÓN:</b><br>";
                     for (let j in sala.jugadores) {
                         let r = sala.jugadores[j];
                         if(r !== "Sin asignar") resumen.innerHTML += `${j}: <span style="color:${coloresPersonajes[r]}">${r}</span><br>`;
                     }
-
                 } 
                 else if (sala.estado === 'jugando') {
+                    // PANTALLA 3D
                     document.getElementById('pantalla-seleccion').style.display = 'none';
                     document.getElementById('pantalla-juego').style.display = 'block';
+                    
+                    if (!motor3DIniciado) {
+                        motor3DIniciado = true;
+                        // Si el jugador no escogió (por algún error), le damos gris por defecto
+                        let colorFinal = coloresPersonajes[miPersonajeAsignado] || "#aaaaaa"; 
+                        iniciarMotor3D(colorFinal);
+                    }
                 }
             });
+        }
+
+        // --- MOTOR 3D (Three.js) ---
+        function iniciarMotor3D(colorJugador) {
+            const contenedor = document.getElementById('tablero-juego');
+            
+            // 1. Escena, Cámara y Renderizador
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+            // Añadir algo de niebla para efecto espacial oscuro
+            scene.fog = new THREE.Fog(0x050505, 10, 50);
+
+            const camera = new THREE.PerspectiveCamera(60, contenedor.clientWidth / contenedor.clientHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
+            contenedor.appendChild(renderer.domElement);
+
+            // 2. Luces
+            const ambientLight = new THREE.AmbientLight(0x404040); // Luz base oscura
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0x33ff33, 1.5, 50); // Luz de neón verde central
+            pointLight.position.set(0, 10, 0);
+            scene.add(pointLight);
+
+            // 3. Suelo de la sala (Grid sci-fi)
+            const gridHelper = new THREE.GridHelper(40, 40, 0x33ff33, 0x222222);
+            scene.add(gridHelper);
+
+            // 4. Crear el Jugador (Un cubo del color de su rol)
+            const geometry = new THREE.BoxGeometry(1, 2, 1); // 1 metro de ancho, 2 de alto
+            const material = new THREE.MeshLambertMaterial({ color: colorJugador });
+            const jugadorObj = new THREE.Mesh(geometry, material);
+            jugadorObj.position.y = 1; // Para que apoye sobre el suelo
+            scene.add(jugadorObj);
+
+            // Configurar la cámara para que mire al jugador en tercera persona isométrica
+            camera.position.set(0, 15, 15);
+            camera.lookAt(jugadorObj.position);
+
+            // 5. Controles WASD
+            const teclas = { w: false, a: false, s: false, d: false };
+            const velocidad = 0.15;
+
+            window.addEventListener('keydown', (e) => {
+                if(e.key === 'w' || e.key === 'W') teclas.w = true;
+                if(e.key === 'a' || e.key === 'A') teclas.a = true;
+                if(e.key === 's' || e.key === 'S') teclas.s = true;
+                if(e.key === 'd' || e.key === 'D') teclas.d = true;
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if(e.key === 'w' || e.key === 'W') teclas.w = false;
+                if(e.key === 'a' || e.key === 'A') teclas.a = false;
+                if(e.key === 's' || e.key === 'S') teclas.s = false;
+                if(e.key === 'd' || e.key === 'D') teclas.d = false;
+            });
+
+            // Reajustar 3D si se cambia el tamaño de la ventana
+            window.addEventListener('resize', () => {
+                camera.aspect = contenedor.clientWidth / contenedor.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
+            });
+
+            // 6. Bucle de Animación 3D
+            function animar3D() {
+                requestAnimationFrame(animar3D);
+
+                // Movimiento local
+                if(teclas.w) jugadorObj.position.z -= velocidad;
+                if(teclas.s) jugadorObj.position.z += velocidad;
+                if(teclas.a) jugadorObj.position.x -= velocidad;
+                if(teclas.d) jugadorObj.position.x += velocidad;
+
+                // Hacer que la cámara persiga suavemente al jugador
+                camera.position.x += (jugadorObj.position.x - camera.position.x) * 0.1;
+                camera.position.z += (jugadorObj.position.z + 15 - camera.position.z) * 0.1;
+                camera.lookAt(jugadorObj.position);
+
+                renderer.render(scene, camera);
+            }
+            animar3D();
         }
     </script>
 </body>
