@@ -16,17 +16,9 @@
         body {
             background-color: #000;
             background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #33ff33;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #33ff33; font-family: 'Courier New', Courier, monospace;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden;
         }
 
         #fondo-espacial {
@@ -40,10 +32,8 @@
         }
 
         .contenedor {
-            background-color: rgba(5, 5, 5, 0.85);
-            backdrop-filter: blur(4px);
-            padding: 30px;
-            border: 1px solid rgba(51, 255, 51, 0.6);
+            background-color: rgba(5, 5, 5, 0.85); backdrop-filter: blur(4px);
+            padding: 30px; border: 1px solid rgba(51, 255, 51, 0.6);
             box-shadow: 0 0 25px rgba(51, 255, 51, 0.2), inset 0 0 15px rgba(51, 255, 51, 0.1);
             text-align: center; width: 320px; position: relative; z-index: 10;
         }
@@ -71,18 +61,37 @@
         }
 
         button:hover { background-color: rgba(51, 255, 51, 0.2); box-shadow: 0 0 15px rgba(51, 255, 51, 0.5); }
-
         .texto-secundario { font-size: 12px; color: rgba(51, 255, 51, 0.6); margin: 15px 0; }
         .codigo-destacado { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 12px #33ff33; letter-spacing: 8px; margin: 15px 0; }
         #lista-jugadores { list-style: none; padding: 0; margin-top: 15px; text-align: left; border: 1px solid rgba(51, 255, 51, 0.3); padding: 10px; min-height: 100px; background-color: rgba(0, 0, 0, 0.6); }
         #lista-jugadores li::before { content: "> "; }
 
-        /* Contenedor especial para el Canvas 3D */
+        /* NUEVO: Contenedor Pantalla Completa para el Juego 3D */
         #pantalla-juego {
-            width: 90vw; height: 90vh; max-width: 1200px; padding: 15px;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #000; z-index: 100; display: none; margin: 0; padding: 0;
         }
+        
         #tablero-juego {
-            width: 100%; height: calc(100% - 60px); margin-top: 10px; border: 1px solid #33ff33; background-color: #050505;
+            width: 100%; height: 100%; cursor: crosshair;
+        }
+
+        #ui-juego {
+            position: absolute; top: 20px; left: 20px; z-index: 101; pointer-events: none;
+        }
+
+        #instrucciones-3d {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85); border: 1px solid #33ff33;
+            padding: 30px; text-align: center; z-index: 102; box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+            pointer-events: none;
+        }
+
+        /* Mirilla en el centro de la pantalla */
+        #mirilla {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 4px; height: 4px; background-color: rgba(255,255,255,0.5); border-radius: 50%;
+            z-index: 101; pointer-events: none;
         }
     </style>
 </head>
@@ -90,6 +99,7 @@
 
     <canvas id="fondo-espacial"></canvas>
 
+    <!-- MENÚ PRINCIPAL Y SALAS DE ESPERA -->
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
@@ -114,9 +124,20 @@
         <div id="resumen-elecciones" style="margin-top: 20px; font-size: 12px; text-align: left; border-top: 1px dashed #33ff33; padding-top: 10px;"></div>
     </div>
 
-    <div class="contenedor" id="pantalla-juego" style="display: none;">
-        <h2 style="margin: 0;">Nave Nostromo - Sector 3D</h2>
-        <p class="texto-secundario" style="margin: 5px 0;">SISTEMAS DE MOVIMIENTO (WASD): EN LÍNEA</p>
+    <!-- PANTALLA COMPLETA 3D -->
+    <div id="pantalla-juego">
+        <div id="ui-juego">
+            <h3 style="margin:0; border-bottom: 1px solid #33ff33;">SALA PRINCIPAL - SECTOR 1</h3>
+            <p id="info-rol" class="texto-secundario" style="margin: 5px 0;"></p>
+        </div>
+        
+        <div id="instrucciones-3d">
+            <h2 style="margin-top:0;">INICIANDO SOPORTE VITAL</h2>
+            <p>HAZ CLIC EN CUALQUIER PARTE PARA ENTRAR</p>
+            <p class="texto-secundario">Moverse: W A S D | Mirar: Ratón</p>
+        </div>
+        
+        <div id="mirilla"></div>
         <div id="tablero-juego"></div>
     </div>
 
@@ -165,7 +186,7 @@
         
         let miSalaActual = "";
         let miNombre = ""; 
-        let miPersonajeAsignado = ""; // Guardaremos el rol elegido aquí
+        let miPersonajeAsignado = ""; 
 
         const coloresPersonajes = {
             "Soldado": "#ff3333", "Capitán": "#3366ff", "Explorador": "#9933ff",
@@ -218,7 +239,7 @@
         }
 
         function seleccionarPersonaje(personaje) {
-            miPersonajeAsignado = personaje; // Guardo localmente mi personaje para pasárselo al 3D
+            miPersonajeAsignado = personaje;
             db.ref('salas/' + miSalaActual + '/seleccion').once('value').then((snapshot) => {
                 let sel = snapshot.val();
                 db.ref('salas/' + miSalaActual + '/jugadores').update({ [miNombre]: personaje });
@@ -236,24 +257,20 @@
             });
         }
 
-        let motor3DIniciado = false; // Control para iniciar el 3D solo una vez
+        let motor3DIniciado = false; 
 
         function escucharCambiosSala(codigo) {
             db.ref('salas/' + codigo).on('value', (snapshot) => {
                 const sala = snapshot.val();
                 if(!sala) return;
 
-                // Actualizar lista
                 const lista = document.getElementById('lista-jugadores'); lista.innerHTML = ''; 
                 for (let j in sala.jugadores) {
                     let rol = sala.jugadores[j] !== "Sin asignar" ? ` - <span style="color:${coloresPersonajes[sala.jugadores[j]]}">${sala.jugadores[j]}</span>` : '';
                     lista.innerHTML += `<li>${j}${rol}</li>`;
                 }
 
-                if (sala.estado === 'esperando') {
-                    // Lobby normal
-                } 
-                else if (sala.estado === 'seleccion') {
+                if (sala.estado === 'seleccion') {
                     document.getElementById('sala-espera').style.display = 'none';
                     document.getElementById('pantalla-seleccion').style.display = 'block';
 
@@ -278,97 +295,188 @@
                     }
                 } 
                 else if (sala.estado === 'jugando') {
-                    // PANTALLA 3D
+                    // Limpiamos la pantalla 2D y mostramos la de 100vw/100vh
+                    document.getElementById('fondo-espacial').style.display = 'none';
                     document.getElementById('pantalla-seleccion').style.display = 'none';
                     document.getElementById('pantalla-juego').style.display = 'block';
                     
                     if (!motor3DIniciado) {
                         motor3DIniciado = true;
-                        // Si el jugador no escogió (por algún error), le damos gris por defecto
                         let colorFinal = coloresPersonajes[miPersonajeAsignado] || "#aaaaaa"; 
-                        iniciarMotor3D(colorFinal);
+                        document.getElementById('info-rol').innerHTML = `IDENTIFICACIÓN: ${miNombre} | ROL: <span style="color:${colorFinal}">${miPersonajeAsignado || "Desconocido"}</span>`;
+                        iniciarMotor3D();
                     }
                 }
             });
         }
 
-        // --- MOTOR 3D (Three.js) ---
-        function iniciarMotor3D(colorJugador) {
+        // --- MOTOR 3D (PRIMERA PERSONA) ---
+        function iniciarMotor3D() {
             const contenedor = document.getElementById('tablero-juego');
             
-            // 1. Escena, Cámara y Renderizador
+            // 1. Escena y Renderizador
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505);
-            // Añadir algo de niebla para efecto espacial oscuro
-            scene.fog = new THREE.Fog(0x050505, 10, 50);
+            scene.background = new THREE.Color(0x020202);
+            scene.fog = new THREE.Fog(0x020202, 10, 45); // Niebla oscura para dar ambiente
 
-            const camera = new THREE.PerspectiveCamera(60, contenedor.clientWidth / contenedor.clientHeight, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
             const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
+            renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
             // 2. Luces
-            const ambientLight = new THREE.AmbientLight(0x404040); // Luz base oscura
+            const ambientLight = new THREE.AmbientLight(0x222222);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0x33ff33, 1.5, 50); // Luz de neón verde central
+            
+            // Luz central verde
+            const pointLight = new THREE.PointLight(0x33ff33, 1, 40); 
             pointLight.position.set(0, 10, 0);
             scene.add(pointLight);
 
-            // 3. Suelo de la sala (Grid sci-fi)
-            const gridHelper = new THREE.GridHelper(40, 40, 0x33ff33, 0x222222);
+            // 3. Crear la Habitación Cerrada (40x40)
+            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            const materialPared = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+            
+            // Suelo
+            const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
+            suelo.rotation.x = -Math.PI / 2;
+            scene.add(suelo);
+            
+            // Rejilla del suelo para saber que te mueves
+            const gridHelper = new THREE.GridHelper(40, 40, 0x114411, 0x051105);
+            gridHelper.position.y = 0.01;
             scene.add(gridHelper);
 
-            // 4. Crear el Jugador (Un cubo del color de su rol)
-            const geometry = new THREE.BoxGeometry(1, 2, 1); // 1 metro de ancho, 2 de alto
-            const material = new THREE.MeshLambertMaterial({ color: colorJugador });
-            const jugadorObj = new THREE.Mesh(geometry, material);
-            jugadorObj.position.y = 1; // Para que apoye sobre el suelo
-            scene.add(jugadorObj);
+            // Techo
+            const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
+            techo.rotation.x = Math.PI / 2;
+            techo.position.y = 15;
+            scene.add(techo);
 
-            // Configurar la cámara para que mire al jugador en tercera persona isométrica
-            camera.position.set(0, 15, 15);
-            camera.lookAt(jugadorObj.position);
+            // Paredes (Norte, Sur, Este, Oeste)
+            const geomPared = new THREE.PlaneGeometry(40, 15);
+            
+            const pared1 = new THREE.Mesh(geomPared, materialPared);
+            pared1.position.set(0, 7.5, -20);
+            scene.add(pared1);
 
-            // 5. Controles WASD
+            const pared2 = new THREE.Mesh(geomPared, materialPared);
+            pared2.position.set(0, 7.5, 20);
+            pared2.rotation.y = Math.PI;
+            scene.add(pared2);
+
+            const pared3 = new THREE.Mesh(geomPared, materialPared);
+            pared3.position.set(-20, 7.5, 0);
+            pared3.rotation.y = Math.PI / 2;
+            scene.add(pared3);
+
+            const pared4 = new THREE.Mesh(geomPared, materialPared);
+            pared4.position.set(20, 7.5, 0);
+            pared4.rotation.y = -Math.PI / 2;
+            scene.add(pared4);
+
+            // 4. Puertas de compuerta en cada pared
+            const geomPuerta = new THREE.PlaneGeometry(6, 10);
+            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x550000 }); // Rojas oscuras
+
+            const puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
+            puerta1.position.set(0, 5, -19.9); // Pegada a la pared norte
+            scene.add(puerta1);
+
+            const puerta2 = new THREE.Mesh(geomPuerta, materialPuerta);
+            puerta2.position.set(0, 5, 19.9);
+            puerta2.rotation.y = Math.PI;
+            scene.add(puerta2);
+
+            const puerta3 = new THREE.Mesh(geomPuerta, materialPuerta);
+            puerta3.position.set(-19.9, 5, 0);
+            puerta3.rotation.y = Math.PI / 2;
+            scene.add(puerta3);
+
+            const puerta4 = new THREE.Mesh(geomPuerta, materialPuerta);
+            puerta4.position.set(19.9, 5, 0);
+            puerta4.rotation.y = -Math.PI / 2;
+            scene.add(puerta4);
+
+            // 5. Configurar Jugador / Cámara
+            camera.position.set(0, 6, 0); // Altura de los ojos humanos
+            camera.rotation.order = 'YXZ'; // Para que el ratón no rote la cámara en diagonal
+
+            let yaw = 0; // Giro izquierda/derecha
+            let pitch = 0; // Giro arriba/abajo
             const teclas = { w: false, a: false, s: false, d: false };
-            const velocidad = 0.15;
+            const velocidad = 0.2;
 
+            // Bloquear el ratón al hacer clic (Controles FPS)
+            contenedor.addEventListener('click', () => {
+                contenedor.requestPointerLock();
+            });
+
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement === contenedor) {
+                    document.getElementById('instrucciones-3d').style.display = 'none';
+                } else {
+                    document.getElementById('instrucciones-3d').style.display = 'block';
+                }
+            });
+
+            // Rotación con el ratón
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === contenedor) {
+                    yaw -= e.movementX * 0.002;
+                    pitch -= e.movementY * 0.002;
+                    
+                    // Limitar para que no pueda dar la vuelta a la cabeza hacia atrás
+                    pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+                    
+                    camera.rotation.set(pitch, yaw, 0);
+                }
+            });
+
+            // Capturar teclado
             window.addEventListener('keydown', (e) => {
-                if(e.key === 'w' || e.key === 'W') teclas.w = true;
-                if(e.key === 'a' || e.key === 'A') teclas.a = true;
-                if(e.key === 's' || e.key === 'S') teclas.s = true;
-                if(e.key === 'd' || e.key === 'D') teclas.d = true;
+                if(e.key.toLowerCase() === 'w') teclas.w = true;
+                if(e.key.toLowerCase() === 'a') teclas.a = true;
+                if(e.key.toLowerCase() === 's') teclas.s = true;
+                if(e.key.toLowerCase() === 'd') teclas.d = true;
             });
 
             window.addEventListener('keyup', (e) => {
-                if(e.key === 'w' || e.key === 'W') teclas.w = false;
-                if(e.key === 'a' || e.key === 'A') teclas.a = false;
-                if(e.key === 's' || e.key === 'S') teclas.s = false;
-                if(e.key === 'd' || e.key === 'D') teclas.d = false;
+                if(e.key.toLowerCase() === 'w') teclas.w = false;
+                if(e.key.toLowerCase() === 'a') teclas.a = false;
+                if(e.key.toLowerCase() === 's') teclas.s = false;
+                if(e.key.toLowerCase() === 'd') teclas.d = false;
             });
 
-            // Reajustar 3D si se cambia el tamaño de la ventana
             window.addEventListener('resize', () => {
-                camera.aspect = contenedor.clientWidth / contenedor.clientHeight;
+                camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
-                renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
+                renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            // 6. Bucle de Animación 3D
+            const direccion = new THREE.Vector3();
+            const derecha = new THREE.Vector3();
+
+            // 6. Bucle de Animación
             function animar3D() {
                 requestAnimationFrame(animar3D);
 
-                // Movimiento local
-                if(teclas.w) jugadorObj.position.z -= velocidad;
-                if(teclas.s) jugadorObj.position.z += velocidad;
-                if(teclas.a) jugadorObj.position.x -= velocidad;
-                if(teclas.d) jugadorObj.position.x += velocidad;
+                // Calcular hacia dónde miramos para caminar hacia adelante
+                camera.getWorldDirection(direccion);
+                direccion.y = 0; // Para no volar al mirar hacia arriba
+                direccion.normalize();
+                derecha.crossVectors(camera.up, direccion).normalize();
 
-                // Hacer que la cámara persiga suavemente al jugador
-                camera.position.x += (jugadorObj.position.x - camera.position.x) * 0.1;
-                camera.position.z += (jugadorObj.position.z + 15 - camera.position.z) * 0.1;
-                camera.lookAt(jugadorObj.position);
+                if (teclas.w) camera.position.addScaledVector(direccion, velocidad);
+                if (teclas.s) camera.position.addScaledVector(direccion, -velocidad);
+                if (teclas.a) camera.position.addScaledVector(derecha, -velocidad);
+                if (teclas.d) camera.position.addScaledVector(derecha, velocidad);
+
+                // COLISIONES: Mantener al jugador dentro de la sala (Rango de -19 a 19 para la sala de 40x40)
+                camera.position.x = Math.max(-19, Math.min(19, camera.position.x));
+                camera.position.z = Math.max(-19, Math.min(19, camera.position.z));
+                camera.position.y = 6; // Mantener la altura constante
 
                 renderer.render(scene, camera);
             }
