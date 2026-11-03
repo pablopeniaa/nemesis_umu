@@ -169,7 +169,7 @@ function escucharCambiosSala(codigo) {
     });
 }
 
-// --- MOTOR 3D (HIBERNATORIO AVANZADO) ---
+// --- MOTOR 3D Y GENERADOR DE SALAS HEXAGONALES ---
 function iniciarMotor3D(cantidadJugadores) {
     const contenedor = document.getElementById('tablero-juego');
     const scene = new THREE.Scene();
@@ -181,11 +181,8 @@ function iniciarMotor3D(cantidadJugadores) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     contenedor.appendChild(renderer.domElement);
 
+    // --- MATERIALES COMPARTIDOS (Mismo suelo, paredes y techo idénticos) ---
     const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
-    const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
-    suelo.rotation.x = -Math.PI / 2; 
-    scene.add(suelo);
-
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
         'pngwing.com.png', 
@@ -202,70 +199,84 @@ function iniciarMotor3D(cantidadJugadores) {
     const matBordePanel = new THREE.MeshLambertMaterial({ color: 0x111418 });
     const matTechoPlaca = new THREE.MeshLambertMaterial({ color: 0x181c22 });
     const matViga = new THREE.MeshLambertMaterial({ color: 0x3a424f });
-
-    const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), matTechoPlaca);
-    techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
-
-    for (let i = -15; i <= 15; i += 10) {
-        let vigaX = new THREE.Mesh(new THREE.BoxGeometry(40, 0.8, 1.2), matViga);
-        vigaX.position.set(0, 14.6, i); scene.add(vigaX);
-
-        let vigaZ = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 40), matViga);
-        vigaZ.position.set(i, 14.6, 0); scene.add(vigaZ);
-    }
-
-    function crearParedConPaneles(ancho, alto, posX, posY, posZ, rotY) {
-        const grupoPared = new THREE.Group();
-        const fondo = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), matBordePanel);
-        grupoPared.add(fondo);
-
-        const numPaneles = 5;
-        const anchoPanel = (ancho / numPaneles) - 0.6;
-        for(let i = 0; i < numPaneles; i++) {
-            let panel = new THREE.Mesh(new THREE.PlaneGeometry(anchoPanel, alto - 1.2), matParedPanel);
-            let desplazamientoX = -ancho/2 + (ancho/numPaneles) * i + (ancho/numPaneles)/2;
-            panel.position.set(desplazamientoX, 0, 0.08);
-            grupoPared.add(panel);
-        }
-
-        grupoPared.position.set(posX, posY, posZ);
-        grupoPared.rotation.y = rotY;
-        scene.add(grupoPared);
-    }
-
-    crearParedConPaneles(40, 15, 0, 7.5, -20, 0);          
-    crearParedConPaneles(40, 15, 0, 7.5, 20, Math.PI);      
-    crearParedConPaneles(40, 15, -20, 7.5, 0, Math.PI / 2); 
-    crearParedConPaneles(40, 15, 20, 7.5, 0, -Math.PI / 2); 
-
-    const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
-    scene.add(ambientLight);
-
-    const posicionesFocos = [
-        { x: -12, z: -12 }, { x: 12, z: -12 },
-        { x: -12, z: 12 }, { x: 12, z: 12 },
-        { x: 0, z: 0 }, { x: -12, z: 0 }, { x: 12, z: 0 }
-    ];
-
-    posicionesFocos.forEach(pos => {
-        const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 16), matViga);
-        focoBase.position.set(pos.x, 14.85, pos.z); scene.add(focoBase);
-
-        const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({color: 0x88ccff}));
-        focoLed.position.set(pos.x, 14.65, pos.z); scene.add(focoLed);
-
-        const luz = new THREE.PointLight(0x88bbff, 0.8, 30);
-        luz.position.set(pos.x, 14.0, pos.z); scene.add(luz);
-    });
-
     const geomPuerta = new THREE.PlaneGeometry(6, 10);
     const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x1f382b });
 
-    const puertaS1 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS1.position.set(-8, 5, 19.85); puertaS1.rotation.y = Math.PI; scene.add(puertaS1);
-    const puertaS2 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS2.position.set(8, 5, 19.85); puertaS2.rotation.y = Math.PI; scene.add(puertaS2);
-    const puertaE = new THREE.Mesh(geomPuerta, materialPuerta); puertaE.position.set(-19.85, 5, 0); puertaE.rotation.y = Math.PI / 2; scene.add(puertaE);
-    const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
+    // --- CONSTRUCTOR DE SALA HEXAGONAL ---
+    function crearSalaHexagonal(offsetX, offsetZ) {
+        const grupoSala = new THREE.Group();
+        const radioSala = 22; // Tamaño de la sala hexagonal
 
+        // Suelo hexagonal / plano base
+        const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
+        suelo.rotation.x = -Math.PI / 2; 
+        grupoSala.add(suelo);
+
+        // Techo sólido con vigas
+        const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), matTechoPlaca);
+        techo.rotation.x = Math.PI / 2; 
+        techo.position.y = 15; 
+        grupoSala.add(techo);
+
+        for (let i = -15; i <= 15; i += 10) {
+            let vigaX = new THREE.Mesh(new THREE.BoxGeometry(40, 0.8, 1.2), matViga);
+            vigaX.position.set(0, 14.6, i); grupoSala.add(vigaX);
+
+            let vigaZ = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 40), matViga);
+            vigaZ.position.set(i, 14.6, 0); grupoSala.add(vigaZ);
+        }
+
+        // 6 Paredes formando el hexágono (o estructura modular conectada)
+        // Pared Norte (Con 2 puertas o acceso principal)
+        const paredN = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
+        paredN.position.set(0, 7.5, -20); grupoSala.add(paredN);
+
+        // Pared Sur (Con puertas opuestas para avanzar a la siguiente sala hexagonal)
+        const paredS = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
+        paredS.position.set(0, 7.5, 20); paredS.rotation.y = Math.PI; grupoSala.add(paredS);
+
+        // Paredes laterales
+        const paredE = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
+        paredE.position.set(-20, 7.5, 0); paredE.rotation.y = Math.PI / 2; grupoSala.add(paredE);
+
+        const paredO = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
+        paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; grupoSala.add(paredO);
+
+        // Puertas en los lados opuestos (Entrada y Salida conectadas)
+        let puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
+        puerta1.position.set(-8, 5, 19.85); puerta1.rotation.y = Math.PI; grupoSala.add(puerta1);
+
+        let puerta2 = new THREE.Mesh(geomPuerta, materialPuerta);
+        puerta2.position.set(8, 5, 19.85); puerta2.rotation.y = Math.PI; grupoSala.add(puerta2);
+
+        let puertaE = new THREE.Mesh(geomPuerta, materialPuerta);
+        puertaE.position.set(-19.85, 5, 0); puertaE.rotation.y = Math.PI / 2; grupoSala.add(puertaE);
+
+        let puertaO = new THREE.Mesh(geomPuerta, materialPuerta);
+        puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; grupoSala.add(puertaO);
+
+        grupoSala.position.set(offsetX, 0, offsetZ);
+        scene.add(grupoSala);
+    }
+
+    // 1. Creamos la sala principal (Hibernatorio) en el centro (0,0)
+    crearSalaHexagonal(0, 0);
+
+    // 2. Generamos salas hexagonales conectadas en las 4 direcciones cardinales (Norte, Sur, Este, Oeste)
+    crearSalaHexagonal(0, -40);  // Sala Norte
+    crearSalaHexagonal(0, 40);   // Sala Sur
+    crearSalaHexagonal(-40, 0);  // Sala Este
+    crearSalaHexagonal(40, 0);   // Sala Oeste
+
+    // --- ILUMINACIÓN GLOBAL ---
+    const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
+    scene.add(ambientLight);
+
+    const luzPrincipal = new THREE.PointLight(0x88bbff, 0.8, 30);
+    luzPrincipal.position.set(0, 14.0, 0);
+    scene.add(luzPrincipal);
+
+    // --- CÁPSULAS DE HIBERNACIÓN (Solo en el Hibernatorio Central) ---
     const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
     const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
     const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
@@ -279,90 +290,76 @@ function iniciarMotor3D(cantidadJugadores) {
         let posZ = -17.5;
 
         const grupoCapsula = new THREE.Group();
-
         let baseInferior = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 1.2, 32), matMetalInferior);
-        baseInferior.position.y = 0.6;
-        grupoCapsula.add(baseInferior);
+        baseInferior.position.y = 0.6; grupoCapsula.add(baseInferior);
 
         let luzInf = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
-        luzInf.position.y = 1.25;
-        grupoCapsula.add(luzInf);
+        luzInf.position.y = 1.25; grupoCapsula.add(luzInf);
 
         let cilindroCristal = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 10.0, 32, 1, true), matCristalLiquido);
-        cilindroCristal.position.y = 6.35;
-        grupoCapsula.add(cilindroCristal);
+        cilindroCristal.position.y = 6.35; grupoCapsula.add(cilindroCristal);
 
         let luzSup = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.25, 32), matAnilloLuz);
-        luzSup.position.y = 11.45;
-        grupoCapsula.add(luzSup);
+        luzSup.position.y = 11.45; grupoCapsula.add(luzSup);
 
         let tapaSuperior = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.2, 1.3, 32), matMetalInferior);
-        tapaSuperior.position.y = 12.25;
-        grupoCapsula.add(tapaSuperior);
+        tapaSuperior.position.y = 12.25; grupoCapsula.add(tapaSuperior);
 
         grupoCapsula.position.set(posX, 0, posZ);
         scene.add(grupoCapsula);
     }
 
+    // --- ASTRONAUTA ESTRADA (En el centro) ---
     const grupoEstrada = new THREE.Group();
     const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); 
     const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
     const matVisorRotto = new THREE.MeshLambertMaterial({ color: 0x050505 });
 
     let cuerpoEstrada = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.5, 16), matTrajeEstrada);
-    cuerpoEstrada.rotation.z = Math.PI / 2; 
-    cuerpoEstrada.position.set(0, 1.2, 0);
-    grupoEstrada.add(cuerpoEstrada);
+    cuerpoEstrada.rotation.z = Math.PI / 2; cuerpoEstrada.position.set(0, 1.2, 0); grupoEstrada.add(cuerpoEstrada);
 
     let cascoEstrada = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), matCascoEstrada);
-    cascoEstrada.position.set(2.0, 1.2, 0);
-    grupoEstrada.add(cascoEstrada);
+    cascoEstrada.position.set(2.0, 1.2, 0); grupoEstrada.add(cascoEstrada);
 
     let visorEstrada = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 1.2), matVisorRotto);
-    visorEstrada.position.set(2.8, 1.2, 0);
-    grupoEstrada.add(visorEstrada);
+    visorEstrada.position.set(2.8, 1.2, 0); grupoEstrada.add(visorEstrada);
 
     grupoEstrada.position.set(0, 0, 0);
     grupoEstrada.rotation.y = Math.PI / 4;
     scene.add(grupoEstrada);
 
+    // --- MODELO DE PERSONAJE ESTILO REPO ---
     function crearModeloHumano(colorHex) {
         const grupo = new THREE.Group();
         const materialColor = new THREE.MeshLambertMaterial({ color: colorHex });
         
         const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 3.8, 16), materialColor);
-        cuerpo.position.y = 1.9; 
-        grupo.add(cuerpo);
+        cuerpo.position.y = 1.9; grupo.add(cuerpo);
         
         const casco = new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), new THREE.MeshLambertMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4 }));
-        casco.position.y = 4.8; 
-        grupo.add(casco);
+        casco.position.y = 4.8; grupo.add(casco);
 
         const materialOjo = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), materialOjo);
-        ojoIzq.position.set(-0.35, 4.9, -0.95);
-        grupo.add(ojoIzq);
+        ojoIzq.position.set(-0.35, 4.9, -0.95); grupo.add(ojoIzq);
 
         const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), materialOjo);
-        ojoDer.position.set(0.35, 4.9, -0.95);
-        grupo.add(ojoDer);
+        ojoDer.position.set(0.35, 4.9, -0.95); grupo.add(ojoDer);
 
         const materialPupila = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), materialPupila);
-        pupilaIzq.position.set(-0.35, 4.9, -1.08);
-        grupo.add(pupilaIzq);
+        pupilaIzq.position.set(-0.35, 4.9, -1.08); grupo.add(pupilaIzq);
 
         const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), materialPupila);
-        pupilaDer.position.set(0.35, 4.9, -1.08);
-        grupo.add(pupilaDer);
+        pupilaDer.position.set(0.35, 4.9, -1.08); grupo.add(pupilaDer);
 
         const boca = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.1), materialPupila);
-        boca.position.set(0, 4.45, -1.0);
-        grupo.add(boca);
+        boca.position.set(0, 4.45, -1.0); grupo.add(boca);
 
         return grupo;
     }
 
+    // --- POSICIÓN INICIAL ALEATORIA ---
     const anguloAleatorio = Math.random() * Math.PI * 2;
     const distanciaAleatoria = 6 + Math.random() * 4; 
     const posXInicial = Math.cos(anguloAleatorio) * distanciaAleatoria;
@@ -456,8 +453,9 @@ function iniciarMotor3D(cantidadJugadores) {
         let testX = camera.position.x + movX;
         let testZ = camera.position.z + movZ;
 
-        if (testX < -18 || testX > 18) movX = 0;
-        if (testZ < -16 || testZ > 18) movZ = 0;
+        // Ampliamos los límites de movimiento globales para permitir explorar las salas adyacentes
+        if (testX < -58 || testX > 58) movX = 0;
+        if (testZ < -58 || testZ > 58) movZ = 0;
 
         if (colisionaConAlguien(camera.position.x + movX, camera.position.z)) movX = 0;
         if (colisionaConAlguien(camera.position.x, camera.position.z + movZ)) movZ = 0;
