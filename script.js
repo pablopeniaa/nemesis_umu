@@ -174,14 +174,23 @@ function iniciarMotor3D(cantidadJugadores) {
     const contenedor = document.getElementById('tablero-juego');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020204);
-    scene.fog = new THREE.Fog(0x020204, 15, 45);
+    scene.fog = new THREE.Fog(0x020204, 25, 60);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
     contenedor.appendChild(renderer.domElement);
 
-    const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
+    // --- ILUMINACIÓN GLOBAL ROBUSTA (Soluciona el problema de visibilidad) ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
+
+    const materialSuelo = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 });
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
         'pngwing.com.png', 
@@ -194,12 +203,12 @@ function iniciarMotor3D(cantidadJugadores) {
         }
     );
 
-    const matParedPanel = new THREE.MeshLambertMaterial({ color: 0x2b313a });
-    const matBordePanel = new THREE.MeshLambertMaterial({ color: 0x111418 });
-    const matTechoPlaca = new THREE.MeshLambertMaterial({ color: 0x181c22 });
-    const matViga = new THREE.MeshLambertMaterial({ color: 0x3a424f });
+    const matParedPanel = new THREE.MeshStandardMaterial({ color: 0x3b424d, roughness: 0.5 });
+    const matBordePanel = new THREE.MeshStandardMaterial({ color: 0x15181c, roughness: 0.7 });
+    const matTechoPlaca = new THREE.MeshStandardMaterial({ color: 0x1e2229, roughness: 0.6 });
+    const matViga = new THREE.MeshStandardMaterial({ color: 0x4a525f, roughness: 0.4 });
     const geomPuerta = new THREE.PlaneGeometry(6, 10);
-    const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x1f382b });
+    const materialPuerta = new THREE.MeshStandardMaterial({ color: 0x1f382b, roughness: 0.4 });
 
     const posicionesFocosTecho = [
         { x: -12, z: -12 }, { x: 12, z: -12 },
@@ -256,16 +265,16 @@ function iniciarMotor3D(cantidadJugadores) {
             focoBase.position.set(pos.x + offsetX, 14.85, pos.z + offsetZ); 
             scene.add(focoBase);
 
-            let encendido = esHibernatorio ? true : (index % 2 === 0 || Math.random() > 0.4); 
+            let encendido = esHibernatorio ? true : (index % 2 === 0 || Math.random() > 0.3); 
 
-            const colorLed = encendido ? 0x88ccff : 0x333333;
+            const colorLed = encendido ? 0xffffff : 0x333333;
             const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({ color: colorLed }));
             focoLed.position.set(pos.x + offsetX, 14.65, pos.z + offsetZ); 
             scene.add(focoLed);
 
             if (encendido) {
-                const luz = new THREE.PointLight(0x88bbff, 0.8, 30);
-                luz.position.set(pos.x + offsetX, 14.0, pos.z + offsetZ); 
+                const luz = new THREE.PointLight(0xffffff, 1.5, 40);
+                luz.position.set(pos.x + offsetX, 13.5, pos.z + offsetZ); 
                 scene.add(luz);
             }
         });
@@ -280,10 +289,8 @@ function iniciarMotor3D(cantidadJugadores) {
     crearSalaHexagonal(-40, 0, false);  
     crearSalaHexagonal(40, 0, false);   
 
-    const ambientLight = new THREE.AmbientLight(0x223344, 0.5);
-    scene.add(ambientLight);
-
-    const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
+    // --- CÁPSULAS DE HIBERNACIÓN ---
+    const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x9ca6b0, metalness: 0.85, roughness: 0.2 });
     const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
     const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
@@ -315,10 +322,11 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoCapsula);
     }
 
+    // --- ESTRADA ---
     const grupoEstrada = new THREE.Group();
-    const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); 
-    const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
-    const matVisorRotto = new THREE.MeshLambertMaterial({ color: 0x050505 });
+    const matTrajeEstrada = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.4 }); 
+    const matCascoEstrada = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 });
+    const matVisorRotto = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1 });
 
     let cuerpoEstrada = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.5, 16), matTrajeEstrada);
     cuerpoEstrada.rotation.z = Math.PI / 2; cuerpoEstrada.position.set(0, 1.2, 0); grupoEstrada.add(cuerpoEstrada);
@@ -333,77 +341,88 @@ function iniciarMotor3D(cantidadJugadores) {
     grupoEstrada.rotation.y = Math.PI / 4;
     scene.add(grupoEstrada);
 
-    // --- NUEVO MODELO DE ASTRONAUTA DETALLADO (Estilo Cooperativo / Tanques de Oxígeno) ---
+    // --- NUEVO MODELO 3D DE ASTRONAUTA PREMIUM (Estilo Cooperativo Indice Profesional) ---
     function crearModeloHumano(colorHex) {
         const grupo = new THREE.Group();
-        const materialTraje = new THREE.MeshLambertMaterial({ color: colorHex });
-        const matCorreas = new THREE.MeshLambertMaterial({ color: 0x111111 });
-        const matTanque = new THREE.MeshStandardMaterial({ color: 0xd4d42a, roughness: 0.3 }); // Tanques amarillos clásicos
-        const matTapaTanque = new THREE.MeshLambertMaterial({ color: 0x222222 });
+        
+        // Materiales con propiedades físicas de alta calidad (brillo y relieve metálico)
+        const materialTraje = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5, metalness: 0.1 });
+        const matCorreas = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+        const matTanque = new THREE.MeshStandardMaterial({ color: 0xe6e619, roughness: 0.2, metalness: 0.3 }); // Tanques amarillos brillantes
+        const matTapaTanque = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.8 });
+        const matCasco = new THREE.MeshStandardMaterial({ color: 0x1f232a, roughness: 0.3, metalness: 0.4 });
+        const matBotasGuantes = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
 
-        // 1. Torso del astronauta
-        const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.0, 3.5, 16), materialTraje);
+        // 1. Torso principal con volumen ergonómico
+        const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.05, 3.6, 16), materialTraje);
         cuerpo.position.y = 1.9; 
         grupo.add(cuerpo);
 
-        // 2. Doble Tanque de Oxígeno trasero (Estilo Lethal Company / REPO)
-        const tanque1 = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.8, 16), matTanque);
-        tanque1.position.set(-0.35, 2.1, -0.9);
-        tanque1.rotation.x = 0.1;
+        // 2. Botas pesadas de astronauta
+        const botaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 1.0), matBotasGuantes);
+        botaIzq.position.set(-0.4, 0.3, 0.1);
+        grupo.add(botaIzq);
+
+        const botaDer = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 1.0), matBotasGuantes);
+        botaDer.position.set(0.4, 0.3, 0.1);
+        grupo.add(botaDer);
+
+        // 3. Tanques de oxígeno traseros dobles (con relieve y proporciones reales)
+        const tanque1 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.0, 16), matTanque);
+        tanque1.position.set(-0.4, 2.1, -0.85);
+        tanque1.rotation.x = 0.08;
         grupo.add(tanque1);
 
-        const tapa1 = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.45, 0.3, 16), matTapaTanque);
-        tapa1.position.set(-0.35, 3.55, -0.95);
+        const tapa1 = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.42, 0.25, 16), matTapaTanque);
+        tapa1.position.set(-0.4, 3.65, -0.92);
         grupo.add(tapa1);
 
-        const tanque2 = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.8, 16), matTanque);
-        tanque2.position.set(0.35, 2.1, -0.9);
-        tanque2.rotation.x = 0.1;
+        const tanque2 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.0, 16), matTanque);
+        tanque2.position.set(0.4, 2.1, -0.85);
+        tanque2.rotation.x = 0.08;
         grupo.add(tanque2);
 
-        const tapa2 = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.45, 0.3, 16), matTapaTanque);
-        tapa2.position.set(0.35, 3.55, -0.95);
+        const tapa2 = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.42, 0.25, 16), matTapaTanque);
+        tapa2.position.set(0.4, 3.65, -0.92);
         grupo.add(tapa2);
 
-        // 3. Correas / Arneses cruzados en la espalda
-        const correa1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 0.1), matCorreas);
-        correa1.position.set(0, 2.5, -0.85);
-        correa1.rotation.z = 0.4;
+        // 4. Correas y arneses cruzados en el pecho y espalda
+        const correa1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 0.08), matCorreas);
+        correa1.position.set(0, 2.5, -0.8);
+        correa1.rotation.z = 0.45;
         grupo.add(correa1);
 
-        const correa2 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 0.1), matCorreas);
-        correa2.position.set(0, 2.5, -0.85);
-        correa2.rotation.z = -0.4;
+        const correa2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 0.08), matCorreas);
+        correa2.position.set(0, 2.5, -0.8);
+        correa2.rotation.z = -0.45;
         grupo.add(correa2);
 
-        // 4. Casco robusto y cabeza
-        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.15, 24, 24), new THREE.MeshLambertMaterial({ color: 0x1f232a }));
-        casco.position.y = 4.7; 
+        // 5. Casco robusto industrial
+        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), matCasco);
+        casco.position.y = 4.75; 
         grupo.add(casco);
 
-        // 5. Ojos expresivos dentro del visor oscuro
+        // 6. Ojos expresivos y boca dentro del visor
         const materialOjo = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
-        ojoIzq.position.set(-0.3, 4.8, -0.92);
+        ojoIzq.position.set(-0.3, 4.85, -0.98);
         grupo.add(ojoIzq);
 
         const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
-        ojoDer.position.set(0.3, 4.8, -0.92);
+        ojoDer.position.set(0.3, 4.85, -0.98);
         grupo.add(ojoDer);
 
-        // Pupilas
         const materialPupila = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
-        pupilaIzq.position.set(-0.3, 4.8, -1.04);
+        pupilaIzq.position.set(-0.3, 4.85, -1.1);
         grupo.add(pupilaIzq);
 
         const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
-        pupilaDer.position.set(0.3, 4.8, -1.04);
+        pupilaDer.position.set(0.3, 4.85, -1.1);
         grupo.add(pupilaDer);
 
-        // Boca expresiva
         const boca = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.07, 0.1), materialPupila);
-        boca.position.set(0, 4.38, -0.96);
+        boca.position.set(0, 4.42, -1.02);
         grupo.add(boca);
 
         return grupo;
