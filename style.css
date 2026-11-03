@@ -1,0 +1,87 @@
+body {
+    background-color: #000;
+    background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop');
+    background-size: cover; background-position: center; background-attachment: fixed;
+    color: #33ff33; font-family: 'Courier New', Courier, monospace;
+    display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden;
+}
+
+#fondo-espacial {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+}
+
+body::after {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.04) 2px, rgba(51, 255, 51, 0.04) 4px);
+    pointer-events: none; z-index: 20;
+}
+
+.contenedor {
+    background-color: rgba(5, 5, 5, 0.85); backdrop-filter: blur(4px);
+    padding: 30px; border: 1px solid rgba(51, 255, 51, 0.6);
+    box-shadow: 0 0 25px rgba(51, 255, 51, 0.2), inset 0 0 15px rgba(51, 255, 51, 0.1);
+    text-align: center; width: 320px; position: relative; z-index: 10;
+}
+
+.contenedor::before {
+    content: "SISTEMA MU-TH-UR 6000"; position: absolute; top: -10px; left: 10px;
+    background: #000; padding: 0 10px; font-size: 12px; color: #33ff33; border: 1px solid #33ff33;
+}
+
+h2 {
+    text-transform: uppercase; letter-spacing: 2px; font-weight: normal; 
+    border-bottom: 1px dashed #33ff33; padding-bottom: 10px; margin-top: 5px;
+}
+
+input {
+    width: 90%; padding: 10px; margin: 10px 0; background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(51, 255, 51, 0.5); color: #33ff33; 
+    font-family: 'Courier New', Courier, monospace; font-size: 16px; box-sizing: border-box; outline: none;
+}
+
+button {
+    width: 100%; padding: 12px; background-color: #000; color: #33ff33;
+    border: 1px solid #33ff33; font-family: 'Courier New', Courier, monospace;
+    font-size: 16px; font-weight: bold; cursor: pointer; margin: 10px 0; text-transform: uppercase; transition: all 0.2s;
+}
+
+button:hover { background-color: rgba(51, 255, 51, 0.2); box-shadow: 0 0 15px rgba(51, 255, 51, 0.5); }
+.texto-secundario { font-size: 12px; color: rgba(51, 255, 51, 0.6); margin: 15px 0; }
+.codigo-destacado { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 12px #33ff33; letter-spacing: 8px; margin: 15px 0; }
+#lista-jugadores { list-style: none; padding: 0; margin-top: 15px; text-align: left; border: 1px solid rgba(51, 255, 51, 0.3); padding: 10px; min-height: 100px; background-color: rgba(0, 0, 0, 0.6); }
+#lista-jugadores li::before { content: "> "; }
+
+#pantalla-juego {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #000; z-index: 100; display: none; margin: 0; padding: 0;
+}
+
+#tablero-juego { width: 100%; height: 100%; cursor: crosshair; }
+#ui-juego { position: absolute; top: 20px; left: 20px; z-index: 101; pointer-events: none; }
+
+#instrucciones-3d {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.85); border: 1px solid #33ff33;
+    padding: 30px; text-align: center; z-index: 102; box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+    pointer-events: none;
+}
+
+#mirilla {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 4px; height: 4px; background-color: rgba(255,255,255,0.5); border-radius: 50%;
+    z-index: 101; pointer-events: none;
+}
+
+#interaccion-ui {
+    position: absolute; top: 55%; left: 50%; transform: translateX(-50%);
+    color: #ff3333; font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.7);
+    padding: 5px 15px; border: 1px solid #ff3333; display: none; z-index: 101; pointer-events: none;
+    letter-spacing: 2px;
+}
+
+#titulo-zona {
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 80px; color: #3366ff; text-shadow: 0 0 30px rgba(51,102,255,1);
+    font-weight: bold; letter-spacing: 15px; z-index: 105; pointer-events: none;
+    opacity: 0; transition: opacity 2s ease-in-out; display: none; text-align: center;
+}
