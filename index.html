@@ -466,12 +466,14 @@
                 camera.getWorldDirection(direccion);
                 direccion.y = 0; // Para no volar al mirar hacia arriba
                 direccion.normalize();
-                derecha.crossVectors(camera.up, direccion).normalize();
+                
+                // CORRECCIÓN: Invertimos el orden para que la derecha sea realmente la derecha
+                derecha.crossVectors(direccion, camera.up).normalize();
 
                 if (teclas.w) camera.position.addScaledVector(direccion, velocidad);
                 if (teclas.s) camera.position.addScaledVector(direccion, -velocidad);
-                if (teclas.a) camera.position.addScaledVector(derecha, -velocidad);
-                if (teclas.d) camera.position.addScaledVector(derecha, velocidad);
+                if (teclas.a) camera.position.addScaledVector(derecha, -velocidad); // A = Izquierda
+                if (teclas.d) camera.position.addScaledVector(derecha, velocidad);  // D = Derecha
 
                 // COLISIONES: Mantener al jugador dentro de la sala (Rango de -19 a 19 para la sala de 40x40)
                 camera.position.x = Math.max(-19, Math.min(19, camera.position.x));
