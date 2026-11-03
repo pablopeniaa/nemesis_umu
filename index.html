@@ -318,16 +318,16 @@
         function iniciarMotor3D() {
             const contenedor = document.getElementById('tablero-juego');
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x010103);
-            scene.fog = new THREE.Fog(0x010103, 12, 40);
+            scene.background = new THREE.Color(0x050508);
+            scene.fog = new THREE.Fog(0x050508, 15, 45);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
-            // --- SUELO TEXTURIZADO (Sin rejilla) ---
-            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
+            // --- SUELO TEXTURIZADO ---
+            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x555555 });
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
             suelo.rotation.x = -Math.PI / 2; 
             scene.add(suelo);
@@ -344,17 +344,17 @@
                 }
             );
 
-            // --- PAREDES Y TECHOS DINÁMICOS ---
-            const matParedPanel = new THREE.MeshLambertMaterial({ color: 0x1b1f24 }); // Gris acero industrial
-            const matBordePanel = new THREE.MeshLambertMaterial({ color: 0x0d0f12 }); // Gris oscuro estructural
-            const matTechoPlaca = new THREE.MeshLambertMaterial({ color: 0x15181c });
-            const matViga = new THREE.MeshLambertMaterial({ color: 0x2a3038 });
+            // --- PARES Y TECHOS DINÁMICOS CON RELIEVE ---
+            const matParedPanel = new THREE.MeshLambertMaterial({ color: 0x2b313a }); // Gris acero claro y metálico
+            const matBordePanel = new THREE.MeshLambertMaterial({ color: 0x111418 }); // Estructura oscura de soporte
+            const matTechoPlaca = new THREE.MeshLambertMaterial({ color: 0x181c22 });
+            const matViga = new THREE.MeshLambertMaterial({ color: 0x3a424f });
 
-            // Techo Sólido con Estructura
+            // Techo Sólido
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), matTechoPlaca);
             techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
 
-            // Vigas transversales en el techo para dar dinamismo
+            // Vigas transversales en el techo
             for (let i = -15; i <= 15; i += 10) {
                 let vigaX = new THREE.Mesh(new THREE.BoxGeometry(40, 0.8, 1.2), matViga);
                 vigaX.position.set(0, 14.6, i); scene.add(vigaX);
@@ -363,21 +363,18 @@
                 vigaZ.position.set(i, 14.6, 0); scene.add(vigaZ);
             }
 
-            // Función para crear paredes con paneles metálicos estructurados
+            // Función para crear paredes dinámicas con paneles y relieve
             function crearParedConPaneles(ancho, alto, posX, posY, posZ, rotY) {
                 const grupoPared = new THREE.Group();
-                
-                // Fondo base de la pared
                 const fondo = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), matBordePanel);
                 grupoPared.add(fondo);
 
-                // Paneles salientes para dar relieve (efecto real de nave)
-                const numPaneles = 4;
-                const anchoPanel = (ancho / numPaneles) - 0.8;
+                const numPaneles = 5;
+                const anchoPanel = (ancho / numPaneles) - 0.6;
                 for(let i = 0; i < numPaneles; i++) {
-                    let panel = new THREE.Mesh(new THREE.PlaneGeometry(anchoPanel, alto - 1.5), matParedPanel);
+                    let panel = new THREE.Mesh(new THREE.PlaneGeometry(anchoPanel, alto - 1.2), matParedPanel);
                     let desplazamientoX = -ancho/2 + (ancho/numPaneles) * i + (ancho/numPaneles)/2;
-                    panel.position.set(desplazamientoX, 0, 0.05); // Ligeramente hacia adelante para crear relieve
+                    panel.position.set(desplazamientoX, 0, 0.08); // Relieve hacia afuera
                     grupoPared.add(panel);
                 }
 
@@ -386,36 +383,36 @@
                 scene.add(grupoPared);
             }
 
-            // Construir las 4 paredes de la sala con relieves
+            // Construir paredes
             crearParedConPaneles(40, 15, 0, 7.5, -20, 0);          // Norte
             crearParedConPaneles(40, 15, 0, 7.5, 20, Math.PI);      // Sur
             crearParedConPaneles(40, 15, -20, 7.5, 0, Math.PI / 2); // Este
             crearParedConPaneles(40, 15, 20, 7.5, 0, -Math.PI / 2); // Oeste
 
-            // --- FOCOS Y LUZ FÍSICA EN EL TECHO ---
-            const ambientLight = new THREE.AmbientLight(0x333344); // Luz ambiental con toque azulado espacial
+            // --- ILUMINACIÓN POTENTE Y DINÁMICA (Focos en el Techo) ---
+            const ambientLight = new THREE.AmbientLight(0x445566, 1.2); // Luz ambiental clara azulada espacial
             scene.add(ambientLight);
 
             const posicionesFocos = [
-                { x: -10, z: -10 }, { x: 10, z: -10 },
-                { x: -10, z: 10 }, { x: 10, z: 10 },
-                { x: 0, z: 0 }
+                { x: -12, z: -12 }, { x: 12, z: -12 },
+                { x: -12, z: 12 }, { x: 12, z: 12 },
+                { x: 0, z: 0 }, { x: -12, z: 0 }, { x: 12, z: 0 }
             ];
 
             posicionesFocos.forEach(pos => {
-                const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.4, 16), matViga);
-                focoBase.position.set(pos.x, 14.8, pos.z); scene.add(focoBase);
+                const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 16), matViga);
+                focoBase.position.set(pos.x, 14.85, pos.z); scene.add(focoBase);
 
-                const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.2, 16), new THREE.MeshBasicMaterial({color: 0x88ccff}));
-                focoLed.position.set(pos.x, 14.5, pos.z); scene.add(focoLed);
+                const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
+                focoLed.position.set(pos.x, 14.65, pos.z); scene.add(focoLed);
 
-                const luz = new THREE.PointLight(0xaaddff, 1.0, 35);
+                const luz = new THREE.PointLight(0xd9f2ff, 1.5, 30); // Focos muy luminosos
                 luz.position.set(pos.x, 14.0, pos.z); scene.add(luz);
             });
 
             // --- PUERTAS ---
             const geomPuerta = new THREE.PlaneGeometry(6, 10);
-            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x183020 });
+            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x1f382b });
 
             const puertaS1 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS1.position.set(-8, 5, 19.85); puertaS1.rotation.y = Math.PI; scene.add(puertaS1);
             const puertaS2 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS2.position.set(8, 5, 19.85); puertaS2.rotation.y = Math.PI; scene.add(puertaS2);
@@ -423,8 +420,8 @@
             const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
 
             // --- CÁPSULAS DE HIBERNACIÓN (Pared Norte) ---
-            const matCapsulaBase = new THREE.MeshLambertMaterial({ color: 0x111318 });
-            const matCapsulaCristal = new THREE.MeshLambertMaterial({ color: 0x3388ff, transparent: true, opacity: 0.6, emissive: 0x113366 });
+            const matCapsulaBase = new THREE.MeshLambertMaterial({ color: 0x181c24 });
+            const matCapsulaCristal = new THREE.MeshLambertMaterial({ color: 0x3399ff, transparent: true, opacity: 0.65, emissive: 0x113366 });
             
             for(let i=0; i<4; i++) {
                 let posX = -12 + (i * 8);
@@ -434,7 +431,7 @@
                 cristal.position.set(posX, 4.5, -18.7); scene.add(cristal);
             }
 
-            // --- CONTROLES Y MOVIMIENTO (Igual que antes) ---
+            // --- JUGADOR Y CONTROLES ---
             camera.position.set(0, 6, 0); 
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
@@ -553,3 +550,6 @@
             }
             animar3D();
         }
+    </script>
+</body>
+</html>
