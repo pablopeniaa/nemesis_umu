@@ -27,12 +27,8 @@
 
         #fondo-espacial {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
         }
 
         body::after {
@@ -40,8 +36,7 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.04) 2px, rgba(51, 255, 51, 0.04) 4px);
-            pointer-events: none;
-            z-index: 20;
+            pointer-events: none; z-index: 20;
         }
 
         .contenedor {
@@ -57,52 +52,34 @@
         }
 
         .contenedor::before {
-            content: "SISTEMA OR-I-HU6000";
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: #000;
-            padding: 0 10px;
-            font-size: 12px;
-            color: #33ff33;
-            border: 1px solid #33ff33;
+            content: "SISTEMA MU-TH-UR 6000";
+            position: absolute; top: -10px; left: 10px;
+            background: #000; padding: 0 10px;
+            font-size: 12px; color: #33ff33; border: 1px solid #33ff33;
         }
 
         h2 {
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: normal;
-            border-bottom: 1px dashed #33ff33;
-            padding-bottom: 10px;
-            margin-top: 5px;
+            text-transform: uppercase; letter-spacing: 2px;
+            font-weight: normal; border-bottom: 1px dashed #33ff33;
+            padding-bottom: 10px; margin-top: 5px;
         }
 
         input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
+            width: 90%; padding: 10px; margin: 10px 0;
             background-color: rgba(0, 0, 0, 0.7);
             border: 1px solid rgba(51, 255, 51, 0.5);
-            color: #33ff33;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
+            color: #33ff33; font-family: 'Courier New', Courier, monospace;
+            font-size: 16px; box-sizing: border-box; outline: none;
         }
 
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #000;
-            color: #33ff33;
+            width: 100%; padding: 12px;
+            background-color: #000; color: #33ff33;
             border: 1px solid #33ff33;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px 0;
-            text-transform: uppercase;
-            transition: all 0.2s;
+            font-size: 16px; font-weight: bold;
+            cursor: pointer; margin: 10px 0;
+            text-transform: uppercase; transition: all 0.2s;
         }
 
         button:hover {
@@ -110,34 +87,9 @@
             box-shadow: 0 0 15px rgba(51, 255, 51, 0.5);
         }
 
-        .texto-secundario {
-            font-size: 12px;
-            color: rgba(51, 255, 51, 0.6);
-            margin: 15px 0;
-        }
-
-        #sala-espera { display: none; }
-        
-        .codigo-destacado {
-            font-size: 36px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 12px #33ff33;
-            letter-spacing: 8px;
-            margin: 15px 0;
-        }
-
-        #lista-jugadores {
-            list-style: none;
-            padding: 0;
-            margin-top: 15px;
-            text-align: left;
-            border: 1px solid rgba(51, 255, 51, 0.3);
-            padding: 10px;
-            min-height: 100px;
-            background-color: rgba(0, 0, 0, 0.6);
-        }
-
+        .texto-secundario { font-size: 12px; color: rgba(51, 255, 51, 0.6); margin: 15px 0; }
+        .codigo-destacado { font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 0 12px #33ff33; letter-spacing: 8px; margin: 15px 0; }
+        #lista-jugadores { list-style: none; padding: 0; margin-top: 15px; text-align: left; border: 1px solid rgba(51, 255, 51, 0.3); padding: 10px; min-height: 100px; background-color: rgba(0, 0, 0, 0.6); }
         #lista-jugadores li::before { content: "> "; }
     </style>
 </head>
@@ -145,6 +97,7 @@
 
     <canvas id="fondo-espacial"></canvas>
 
+    <!-- MENÚ PRINCIPAL -->
     <div class="contenedor" id="menu-principal">
         <h2>Acceso a Tripulación</h2>
         <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
@@ -154,170 +107,253 @@
         <button onclick="unirseSala()">CONECTAR</button>
     </div>
 
-    <div class="contenedor" id="sala-espera">
+    <!-- SALA DE ESPERA -->
+    <div class="contenedor" id="sala-espera" style="display: none;">
         <h2>Protocolo Activo</h2>
         <p class="texto-secundario">CÓDIGO DE ENLACE TRANSMITIDO:</p>
         <div class="codigo-destacado" id="mostrar-codigo"></div>
         <p class="texto-secundario" style="text-align: left; margin-bottom: 5px;">TRIPULACIÓN DETECTADA:</p>
         <ul id="lista-jugadores"></ul>
-        <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar">DESPERTAR DEL HIPERSUEÑO</button>
+        <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar" style="display:none;">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
-    <!-- NUEVO: Contenedor del Juego -->
+    <!-- NUEVO: PANTALLA DE SELECCIÓN DE PERSONAJE -->
+    <div class="contenedor" id="pantalla-seleccion" style="display: none;">
+        <h2>Asignación de Roles</h2>
+        <div id="area-seleccion" style="margin-top: 20px;">
+            <!-- Aquí se inyectan los botones o el texto de espera -->
+        </div>
+        <div id="resumen-elecciones" style="margin-top: 20px; font-size: 12px; text-align: left; border-top: 1px dashed #33ff33; padding-top: 10px;">
+            <!-- Aquí veremos qué ha elegido cada uno -->
+        </div>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
     <div class="contenedor" id="pantalla-juego" style="display: none; width: 80%; height: 80vh; max-width: 800px;">
         <h2>Nave Nostromo - Sector de Carga</h2>
         <p class="texto-secundario">SISTEMAS DE SOPORTE VITAL: EN LÍNEA</p>
         <div id="tablero-juego" style="border: 1px solid rgba(51, 255, 51, 0.6); height: 60vh; margin-top: 20px; position: relative; background-color: rgba(0, 0, 0, 0.8);">
-            <!-- Aquí irá el mapa, los personajes y el alien -->
+            <!-- Mapa del juego -->
         </div>
     </div>
 
     <script>
-        // --- 1. CARGAR LA IMAGEN DEL ASTEROIDE ---
+        // --- ANIMACIÓN DEL ESPACIO ---
         const imgAsteroide = new Image();
-        imgAsteroide.src = 'asteroide.png'; 
+        imgAsteroide.src = 'asteroide.com.png'; 
 
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
         
-        function redimensionar() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', redimensionar);
-        redimensionar();
+        function redimensionar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', redimensionar); redimensionar();
 
         const estrellas = [];
         for (let i = 0; i < 150; i++) {
             estrellas.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radio: Math.random() * 1.2 + 0.3,
-                velocidad: Math.random() * 0.15 + 0.05,
-                opacidad: Math.random(),
-                cambioOpacidad: (Math.random() * 0.01 + 0.005) * (Math.random() < 0.5 ? 1 : -1)
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                radio: Math.random() * 1.2 + 0.3, velocidad: Math.random() * 0.15 + 0.05,
+                opacidad: Math.random(), cambioOpacidad: (Math.random() * 0.01 + 0.005) * (Math.random() < 0.5 ? 1 : -1)
             });
         }
-
         const asteroides = [];
 
         function dibujarEspacio() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Dibujar estrellas
             estrellas.forEach(e => {
                 e.opacidad += e.cambioOpacidad;
                 if(e.opacidad <= 0.1) { e.opacidad = 0.1; e.cambioOpacidad *= -1; }
                 if(e.opacidad >= 1) { e.opacidad = 1; e.cambioOpacidad *= -1; }
-                
                 ctx.fillStyle = `rgba(255, 255, 255, ${e.opacidad})`;
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radio, 0, Math.PI * 2);
-                ctx.fill();
-                
-                e.x -= e.velocidad;
-                if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.radio, 0, Math.PI * 2); ctx.fill();
+                e.x -= e.velocidad; if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
             });
 
-            // Generar asteroides de imagen
             if (imgAsteroide.complete && Math.random() < 0.05) {
                 asteroides.push({
-                    x: canvas.width + 150,
-                    y: Math.random() * canvas.height,
-                    velocidad: Math.random() * 1 + 0.3,
-                    tamaño: Math.random() * 150 + 80,
-                    rotacion: Math.random() * Math.PI * 2,
-                    velRotacion: (Math.random() - 0.5) * 0.02
+                    x: canvas.width + 150, y: Math.random() * canvas.height,
+                    velocidad: Math.random() * 1 + 0.3, tamaño: Math.random() * 150 + 80,
+                    rotacion: Math.random() * Math.PI * 2, velRotacion: (Math.random() - 0.5) * 0.02
                 });
             }
 
-            // Dibujar los asteroides dinámicos
             for (let i = asteroides.length - 1; i >= 0; i--) {
                 let obj = asteroides[i];
-                obj.x -= obj.velocidad;
-                obj.rotacion += obj.velRotacion;
-
-                ctx.save();
-                ctx.translate(obj.x, obj.y);
-                ctx.rotate(obj.rotacion);
+                obj.x -= obj.velocidad; obj.rotacion += obj.velRotacion;
+                ctx.save(); ctx.translate(obj.x, obj.y); ctx.rotate(obj.rotacion);
                 ctx.drawImage(imgAsteroide, -obj.tamaño / 2, -obj.tamaño / 2, obj.tamaño, obj.tamaño);
                 ctx.restore();
-
                 if (obj.x < -300) asteroides.splice(i, 1);
             }
-
             requestAnimationFrame(dibujarEspacio);
         }
         dibujarEspacio();
 
-        // --- LÓGICA DE FIREBASE ---
+        // --- LÓGICA DE FIREBASE Y JUEGO ---
         const firebaseConfig = { databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
         let miSalaActual = "";
+        let miNombre = ""; // Guardamos quién somos localmente
+
+        const coloresPersonajes = {
+            "Soldado": "#ff3333",    // Rojo
+            "Capitán": "#3366ff",    // Azul
+            "Explorador": "#9933ff", // Morado
+            "Ingeniero": "#ff9933",  // Naranja
+            "Científico": "#aaaaaa", // Gris
+            "Piloto": "#33ff33"      // Verde
+        };
 
         function generarCodigo() {
-            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let resultado = '';
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let resultado = '';
             for (let i = 0; i < 5; i++) resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
             return resultado;
         }
 
-        function mostrarLobbyUI(codigo) {
+        function crearSala() {
+            miNombre = document.getElementById('nombre-jugador').value.trim();
+            if (!miNombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
+            
+            const codigo = generarCodigo();
+            miSalaActual = codigo;
+            
+            db.ref('salas/' + codigo).set({ 
+                creador: miNombre, 
+                estado: 'esperando',
+                jugadores: { [miNombre]: "Sin asignar" } 
+            });
+            
             document.getElementById('menu-principal').style.display = 'none';
             document.getElementById('sala-espera').style.display = 'block';
             document.getElementById('mostrar-codigo').innerText = codigo;
-        }
-
-        function crearSala() {
-            const nombre = document.getElementById('nombre-jugador').value;
-            if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
-            const codigo = generarCodigo();
-            miSalaActual = codigo;
-            db.ref('salas/' + codigo).set({ creador: nombre, jugadores: { [nombre]: true } });
-            mostrarLobbyUI(codigo);
+            document.getElementById('btn-empezar').style.display = 'block'; // Solo el creador ve el botón
             escucharCambiosSala(codigo);
         }
 
         function unirseSala() {
-            const nombre = document.getElementById('nombre-jugador').value;
+            miNombre = document.getElementById('nombre-jugador').value.trim();
             const codigo = document.getElementById('codigo-input').value.toUpperCase();
-            if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
+            if (!miNombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
             if (codigo.length !== 5) return alert("ERROR: CÓDIGO INVÁLIDO.");
+            
             db.ref('salas/' + codigo).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     miSalaActual = codigo;
-                    db.ref('salas/' + codigo + '/jugadores').update({ [nombre]: true });
-                    mostrarLobbyUI(codigo);
+                    db.ref('salas/' + codigo + '/jugadores').update({ [miNombre]: "Sin asignar" });
+                    
+                    document.getElementById('menu-principal').style.display = 'none';
+                    document.getElementById('sala-espera').style.display = 'block';
+                    document.getElementById('mostrar-codigo').innerText = codigo;
+                    document.getElementById('btn-empezar').style.display = 'none'; // Invitados no ven el botón
                     escucharCambiosSala(codigo);
                 } else alert("ERROR: NAVE NO ENCONTRADA.");
             });
         }
 
-        function escucharCambiosSala(codigo) {
-            // Escuchar la lista de jugadores
-            db.ref('salas/' + codigo + '/jugadores').on('value', (snapshot) => {
-                const jugadores = snapshot.val();
-                const lista = document.getElementById('lista-jugadores');
-                lista.innerHTML = ''; 
-                for (let jugador in jugadores) lista.innerHTML += `<li>${jugador} [EN LÍNEA]</li>`;
-            });
+        function empezarJuego() {
+            db.ref('salas/' + miSalaActual + '/jugadores').once('value').then((snapshot) => {
+                const listaJugadores = Object.keys(snapshot.val());
+                let disponibles = ["Soldado", "Capitán", "Explorador", "Ingeniero", "Científico", "Piloto"];
+                
+                // Desordenamos la lista de personajes
+                disponibles = disponibles.sort(() => Math.random() - 0.5);
+                // Sacamos los 2 primeros para el primer turno
+                const opcionesTurno1 = disponibles.splice(0, 2);
 
-            // NUEVO: Escuchar el estado de la partida
-            db.ref('salas/' + codigo + '/estado').on('value', (snapshot) => {
-                const estado = snapshot.val();
-                if (estado === 'jugando') {
-                    // Ocultar lobby, mostrar juego
-                    document.getElementById('sala-espera').style.display = 'none';
-                    document.getElementById('pantalla-juego').style.display = 'block';
+                db.ref('salas/' + miSalaActual).update({
+                    estado: 'seleccion',
+                    seleccion: {
+                        orden: listaJugadores, // El orden en el que elegirán
+                        turnoActual: 0,
+                        personajesDisponibles: disponibles,
+                        opcionesActuales: opcionesTurno1
+                    }
+                });
+            });
+        }
+
+        function seleccionarPersonaje(personajeElegido) {
+            db.ref('salas/' + miSalaActual + '/seleccion').once('value').then((snapshot) => {
+                let sel = snapshot.val();
+                
+                // 1. Asignamos el personaje al jugador en la base de datos
+                db.ref('salas/' + miSalaActual + '/jugadores').update({ [miNombre]: personajeElegido });
+
+                // 2. Metemos la opción que descartó de vuelta al saco
+                let descartado = sel.opcionesActuales.find(p => p !== personajeElegido);
+                if(descartado) sel.personajesDisponibles.push(descartado);
+
+                // 3. Preparamos el siguiente turno
+                let sigTurno = sel.turnoActual + 1;
+                
+                if (sigTurno >= sel.orden.length) {
+                    // Si ya han elegido todos, pasamos al juego real
+                    db.ref('salas/' + miSalaActual).update({ estado: 'jugando' });
+                } else {
+                    // Sacamos 2 opciones nuevas para el siguiente jugador
+                    sel.personajesDisponibles = sel.personajesDisponibles.sort(() => Math.random() - 0.5);
+                    let nuevasOpciones = sel.personajesDisponibles.splice(0, 2);
+
+                    db.ref('salas/' + miSalaActual + '/seleccion').update({
+                        turnoActual: sigTurno,
+                        personajesDisponibles: sel.personajesDisponibles,
+                        opcionesActuales: nuevasOpciones
+                    });
                 }
             });
         }
-        
-        function empezarJuego() {
-            // NUEVO: Avisar a Firebase de que la partida comienza
-            db.ref('salas/' + miSalaActual).update({
-                estado: 'jugando'
+
+        function escucharCambiosSala(codigo) {
+            db.ref('salas/' + codigo).on('value', (snapshot) => {
+                const sala = snapshot.val();
+                if(!sala) return;
+
+                // Actualizar la lista de jugadores en el lobby
+                const lista = document.getElementById('lista-jugadores');
+                lista.innerHTML = ''; 
+                for (let j in sala.jugadores) {
+                    let rol = sala.jugadores[j] !== "Sin asignar" ? ` - <span style="color:${coloresPersonajes[sala.jugadores[j]]}">${sala.jugadores[j]}</span>` : '';
+                    lista.innerHTML += `<li>${j}${rol}</li>`;
+                }
+
+                // CONTROL DE PANTALLAS SEGÚN EL ESTADO
+                if (sala.estado === 'esperando') {
+                    // Estamos en el lobby
+                } 
+                else if (sala.estado === 'seleccion') {
+                    document.getElementById('sala-espera').style.display = 'none';
+                    document.getElementById('pantalla-seleccion').style.display = 'block';
+
+                    const sel = sala.seleccion;
+                    const jugadorTurno = sel.orden[sel.turnoActual];
+                    const area = document.getElementById('area-seleccion');
+
+                    if (jugadorTurno === miNombre) {
+                        // ES MI TURNO
+                        area.innerHTML = `<p style="color: #fff;">SISTEMA: REQUIERE TU CONFIRMACIÓN DE ROL.</p>`;
+                        sel.opcionesActuales.forEach(p => {
+                            area.innerHTML += `<button style="color: ${coloresPersonajes[p]}; border-color: ${coloresPersonajes[p]};" onclick="seleccionarPersonaje('${p}')">${p}</button>`;
+                        });
+                    } else {
+                        // TURNO DE OTRO
+                        area.innerHTML = `<p class="texto-secundario" style="font-size: 16px; border: 1px solid rgba(51,255,51,0.3); padding: 20px;">ESPERANDO A QUE <b>${jugadorTurno}</b> ELIJA SU ROL...</p>`;
+                    }
+                    
+                    // Mostrar quién tiene qué
+                    const resumen = document.getElementById('resumen-elecciones');
+                    resumen.innerHTML = "<b>ESTADO DE LA TRIPULACIÓN:</b><br>";
+                    for (let j in sala.jugadores) {
+                        let r = sala.jugadores[j];
+                        if(r !== "Sin asignar") resumen.innerHTML += `${j}: <span style="color:${coloresPersonajes[r]}">${r}</span><br>`;
+                    }
+
+                } 
+                else if (sala.estado === 'jugando') {
+                    document.getElementById('pantalla-seleccion').style.display = 'none';
+                    document.getElementById('pantalla-juego').style.display = 'block';
+                }
             });
         }
     </script>
