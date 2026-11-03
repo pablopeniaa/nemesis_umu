@@ -3,115 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- El título que aparecerá en Google -->
-    <title>Nemesis UMU - El Juego</title>
-    <!-- La descripción que aparece debajo del enlace en Google -->
-    <meta name="description" content="Juega a Nemesis UMU con tus amigos. Crea tu sala, comparte el código y entra en la partida.">
-    <!-- ... resto de tus scripts de Firebase y estilos ... -->
-</head>
+    <title>Nemesis UMU - Terminal</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2c3e50;
+            background-color: #0a0a0a;
+            color: #33ff33;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            color: #333;
+            /* Efecto sutil de líneas de monitor antiguo */
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.05) 2px, rgba(51, 255, 51, 0.05) 4px);
         }
+
         .contenedor {
-            background-color: white;
+            background-color: #000;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 1px solid #33ff33;
+            box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);
             text-align: center;
-            width: 300px;
+            width: 320px;
+            position: relative;
         }
+
+        /* Adorno estilo Weyland-Yutani */
+        .contenedor::before {
+            content: "SISTEMA MU-TH-UR 6000";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #0a0a0a;
+            padding: 0 10px;
+            font-size: 12px;
+            color: #33ff33;
+        }
+
+        h2 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: normal;
+            border-bottom: 1px dashed #33ff33;
+            padding-bottom: 10px;
+        }
+
         input {
             width: 90%;
             padding: 10px;
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            background-color: #000;
+            border: 1px solid #33ff33;
+            color: #33ff33;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
             box-sizing: border-box;
+            outline: none;
         }
+
+        input:focus {
+            box-shadow: 0 0 8px rgba(51, 255, 51, 0.5);
+        }
+
+        input::placeholder {
+            color: rgba(51, 255, 51, 0.4);
+        }
+
         button {
             width: 100%;
             padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
+            background-color: #000;
+            color: #33ff33;
+            border: 1px solid #33ff33;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
-            cursor: pointer;
-            margin: 5px 0;
-            transition: background 0.3s;
-        }
-        button:hover { background-color: #2980b9; }
-        .boton-secundario { background-color: #2ecc71; }
-        .boton-secundario:hover { background-color: #27ae60; }
-        
-        #sala-espera { display: none; }
-        .codigo-destacado {
-            font-size: 32px;
             font-weight: bold;
-            color: #e74c3c;
-            letter-spacing: 5px;
+            cursor: pointer;
             margin: 10px 0;
+            text-transform: uppercase;
+            transition: all 0.2s;
         }
+
+        button:hover {
+            background-color: #33ff33;
+            color: #000;
+        }
+
+        .texto-secundario {
+            font-size: 12px;
+            color: rgba(51, 255, 51, 0.6);
+            margin: 15px 0;
+            text-transform: uppercase;
+        }
+
+        #sala-espera { display: none; }
+        
+        .codigo-destacado {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #33ff33;
+            letter-spacing: 8px;
+            margin: 15px 0;
+        }
+
         #lista-jugadores {
             list-style: none;
             padding: 0;
             margin-top: 15px;
             text-align: left;
-            background: #f8f9fa;
-            border-radius: 6px;
+            border: 1px solid rgba(51, 255, 51, 0.3);
             padding: 10px;
+            min-height: 100px;
         }
+
         #lista-jugadores li {
-            padding: 8px 0;
-            border-bottom: 1px solid #ddd;
+            padding: 5px 0;
+            font-size: 14px;
         }
-        #lista-jugadores li:last-child { border-bottom: none; }
+        
+        #lista-jugadores li::before {
+            content: "> ";
+        }
+
+        .alerta {
+            color: #ff3333;
+            border-color: #ff3333;
+        }
     </style>
 </head>
 <body>
 
     <div class="contenedor" id="menu-principal">
-        <h2>Entrar al Juego</h2>
-        <input type="text" id="nombre-jugador" placeholder="Tu nombre" required>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <h2>Acceso a Tripulación</h2>
+        <input type="text" id="nombre-jugador" placeholder="IDENTIFICACIÓN" required autocomplete="off">
         
-        <button onclick="crearSala()">Crear Nueva Sala</button>
-        <p style="margin: 15px 0; color: #7f8c8d;">o únete a una existente</p>
+        <button onclick="crearSala()">INICIAR PROTOCOLO (Crear)</button>
         
-        <input type="text" id="codigo-input" placeholder="Código de 5 letras" maxlength="5">
-        <button class="boton-secundario" onclick="unirseSala()">Unirse a Sala</button>
+        <div class="texto-secundario">--- O ACCEDE A UNA NAVE ---</div>
+        
+        <input type="text" id="codigo-input" placeholder="CÓDIGO DE ENLACE" maxlength="5" autocomplete="off">
+        <button onclick="unirseSala()">CONECTAR</button>
     </div>
 
     <div class="contenedor" id="sala-espera">
-        <h2>Sala de Espera</h2>
-        <p>Código para invitar:</p>
+        <h2>Protocolo Activo</h2>
+        <p class="texto-secundario">CÓDIGO DE ENLACE TRANSMITIDO:</p>
         <div class="codigo-destacado" id="mostrar-codigo"></div>
         
-        <h3 style="margin-top: 20px; font-size: 16px;">Jugadores conectados:</h3>
+        <p class="texto-secundario" style="text-align: left; margin-bottom: 5px;">TRIPULACIÓN DETECTADA:</p>
         <ul id="lista-jugadores">
-            <!-- Aquí aparecerán los jugadores mágicamente -->
+            <!-- Los jugadores aparecen aquí -->
         </ul>
         
-        <button style="margin-top: 20px; background-color: #f39c12;" onclick="empezarJuego()" id="btn-empezar" style="display:none;">Empezar Partida</button>
+        <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
     <script>
         // --- 1. CONFIGURACIÓN DE FIREBASE ---
-        // ¡CAMBIA ESTA URL POR LA DE TU PROYECTO!
         const firebaseConfig = {
             databaseURL: "https://nemesis-54598-default-rtdb.firebaseio.com/" 
         };
         
-        // Iniciamos la conexión
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -127,7 +184,6 @@
             return resultado;
         }
 
-        // Esta función cambia la pantalla
         function mostrarLobbyUI(codigo) {
             document.getElementById('menu-principal').style.display = 'none';
             document.getElementById('sala-espera').style.display = 'block';
@@ -136,12 +192,11 @@
 
         function crearSala() {
             const nombre = document.getElementById('nombre-jugador').value;
-            if (!nombre) return alert("Escribe tu nombre.");
+            if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
 
             const codigo = generarCodigo();
             miSalaActual = codigo;
             
-            // Guardamos la sala en la nube
             db.ref('salas/' + codigo).set({
                 creador: nombre,
                 jugadores: {
@@ -157,14 +212,12 @@
             const nombre = document.getElementById('nombre-jugador').value;
             const codigo = document.getElementById('codigo-input').value.toUpperCase();
             
-            if (!nombre) return alert("Escribe tu nombre.");
-            if (codigo.length !== 5) return alert("El código debe tener 5 letras.");
+            if (!nombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
+            if (codigo.length !== 5) return alert("ERROR: CÓDIGO INVÁLIDO.");
 
-            // Comprobamos si la sala existe en la nube
             db.ref('salas/' + codigo).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     miSalaActual = codigo;
-                    // Añadimos al jugador a la sala
                     db.ref('salas/' + codigo + '/jugadores').update({
                         [nombre]: true
                     });
@@ -172,28 +225,26 @@
                     mostrarLobbyUI(codigo);
                     escucharCambiosSala(codigo);
                 } else {
-                    alert("Esa sala no existe. Revisa el código.");
+                    alert("ERROR: NAVE NO ENCONTRADA.");
                 }
             });
         }
 
-        // La magia: escuchar en tiempo real quién entra
         function escucharCambiosSala(codigo) {
             db.ref('salas/' + codigo + '/jugadores').on('value', (snapshot) => {
                 const jugadores = snapshot.val();
                 const lista = document.getElementById('lista-jugadores');
                 
-                lista.innerHTML = ''; // Limpiamos la lista
+                lista.innerHTML = ''; 
                 
-                // Añadimos a cada jugador de la base de datos a la pantalla
                 for (let jugador in jugadores) {
-                    lista.innerHTML += `<li>👤 ${jugador}</li>`;
+                    lista.innerHTML += `<li>${jugador} [EN LÍNEA]</li>`;
                 }
             });
         }
         
         function empezarJuego() {
-            alert("¡Aquí pondremos la lógica para empezar el juego de verdad!");
+            alert("SISTEMA ALERTA: CRIOGENIA DESACTIVADA. PREPARANDO ENTORNO DE JUEGO...");
         }
     </script>
 </body>
