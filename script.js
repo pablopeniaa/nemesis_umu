@@ -181,7 +181,6 @@ function iniciarMotor3D(cantidadJugadores) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     contenedor.appendChild(renderer.domElement);
 
-    // --- MATERIALES COMPARTIDOS ---
     const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x444444 });
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
@@ -202,23 +201,19 @@ function iniciarMotor3D(cantidadJugadores) {
     const geomPuerta = new THREE.PlaneGeometry(6, 10);
     const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x1f382b });
 
-    // Lista de posiciones de los focos en el techo (los mismos 7 focos detallados)
     const posicionesFocosTecho = [
         { x: -12, z: -12 }, { x: 12, z: -12 },
         { x: -12, z: 12 }, { x: 12, z: 12 },
         { x: 0, z: 0 }, { x: -12, z: 0 }, { x: 12, z: 0 }
     ];
 
-    // --- CONSTRUCTOR DE SALA HEXAGONAL ---
     function crearSalaHexagonal(offsetX, offsetZ, esHibernatorio) {
         const grupoSala = new THREE.Group();
 
-        // Suelo
         const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
         suelo.rotation.x = -Math.PI / 2; 
         grupoSala.add(suelo);
 
-        // Techo sólido con vigas
         const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), matTechoPlaca);
         techo.rotation.x = Math.PI / 2; 
         techo.position.y = 15; 
@@ -232,7 +227,6 @@ function iniciarMotor3D(cantidadJugadores) {
             vigaZ.position.set(i, 14.6, 0); grupoSala.add(vigaZ);
         }
 
-        // Paredes del hexágono / sala cuadrada
         const paredN = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredN.position.set(0, 7.5, -20); grupoSala.add(paredN);
 
@@ -245,7 +239,6 @@ function iniciarMotor3D(cantidadJugadores) {
         const paredO = new THREE.Mesh(new THREE.PlaneGeometry(40, 15), matBordePanel);
         paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; grupoSala.add(paredO);
 
-        // Puertas en los lados opuestos
         let puerta1 = new THREE.Mesh(geomPuerta, materialPuerta);
         puerta1.position.set(-8, 5, 19.85); puerta1.rotation.y = Math.PI; grupoSala.add(puerta1);
 
@@ -258,14 +251,12 @@ function iniciarMotor3D(cantidadJugadores) {
         let puertaO = new THREE.Mesh(geomPuerta, materialPuerta);
         puertaO.position.set(19.85, 5, 0); puertaO.rotation.y = -Math.PI / 2; grupoSala.add(puertaO);
 
-        // --- SISTEMA DE LUCES POR SALA ---
-        // Si es el Hibernatorio, todos los focos están encendidos. En las demás salas, algunos sí y otros no de forma aleatoria.
         posicionesFocosTecho.forEach((pos, index) => {
             const focoBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 16), matViga);
             focoBase.position.set(pos.x + offsetX, 14.85, pos.z + offsetZ); 
             scene.add(focoBase);
 
-            let encendido = esHibernatorio ? true : (index % 2 === 0 || Math.random() > 0.4); // En el hibernatorio todas, en las demás variable
+            let encendido = esHibernatorio ? true : (index % 2 === 0 || Math.random() > 0.4); 
 
             const colorLed = encendido ? 0x88ccff : 0x333333;
             const focoLed = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 16), new THREE.MeshBasicMaterial({ color: colorLed }));
@@ -283,20 +274,15 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoSala);
     }
 
-    // 1. Creamos el Hibernatorio Central en (0,0) con TODAS las luces encendidas
     crearSalaHexagonal(0, 0, true);
+    crearSalaHexagonal(0, -40, false);  
+    crearSalaHexagonal(0, 40, false);   
+    crearSalaHexagonal(-40, 0, false);  
+    crearSalaHexagonal(40, 0, false);   
 
-    // 2. Creamos las salas adyacentes con luces variables (algunas sí, algunas no)
-    crearSalaHexagonal(0, -40, false);  // Sala Norte
-    crearSalaHexagonal(0, 40, false);   // Sala Sur
-    crearSalaHexagonal(-40, 0, false);  // Sala Este
-    crearSalaHexagonal(40, 0, false);   // Sala Oeste
-
-    // Luz ambiental general tenue
     const ambientLight = new THREE.AmbientLight(0x223344, 0.5);
     scene.add(ambientLight);
 
-    // --- CÁPSULAS DE HIBERNACIÓN (Solo en el Hibernatorio Central) ---
     const matMetalInferior = new THREE.MeshStandardMaterial({ color: 0x7c8690, metalness: 0.85, roughness: 0.2 });
     const matCristalLiquido = new THREE.MeshPhysicalMaterial({ color: 0x66bbff, transmission: 0.7, opacity: 0.85, transparent: true, roughness: 0.1, ior: 1.33 });
     const matAnilloLuz = new THREE.MeshBasicMaterial({ color: 0x00ffff });
@@ -329,7 +315,6 @@ function iniciarMotor3D(cantidadJugadores) {
         scene.add(grupoCapsula);
     }
 
-    // --- ASTRONAUTA ESTRADA (En el centro del Hibernatorio) ---
     const grupoEstrada = new THREE.Group();
     const matTrajeEstrada = new THREE.MeshLambertMaterial({ color: 0xcc3333 }); 
     const matCascoEstrada = new THREE.MeshLambertMaterial({ color: 0xdddddd });
@@ -348,38 +333,82 @@ function iniciarMotor3D(cantidadJugadores) {
     grupoEstrada.rotation.y = Math.PI / 4;
     scene.add(grupoEstrada);
 
-    // --- MODELO DE PERSONAJE ESTILO REPO ---
+    // --- NUEVO MODELO DE ASTRONAUTA DETALLADO (Estilo Cooperativo / Tanques de Oxígeno) ---
     function crearModeloHumano(colorHex) {
         const grupo = new THREE.Group();
-        const materialColor = new THREE.MeshLambertMaterial({ color: colorHex });
-        
-        const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 3.8, 16), materialColor);
-        cuerpo.position.y = 1.9; grupo.add(cuerpo);
-        
-        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), new THREE.MeshLambertMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4 }));
-        casco.position.y = 4.8; grupo.add(casco);
+        const materialTraje = new THREE.MeshLambertMaterial({ color: colorHex });
+        const matCorreas = new THREE.MeshLambertMaterial({ color: 0x111111 });
+        const matTanque = new THREE.MeshStandardMaterial({ color: 0xd4d42a, roughness: 0.3 }); // Tanques amarillos clásicos
+        const matTapaTanque = new THREE.MeshLambertMaterial({ color: 0x222222 });
 
+        // 1. Torso del astronauta
+        const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.0, 3.5, 16), materialTraje);
+        cuerpo.position.y = 1.9; 
+        grupo.add(cuerpo);
+
+        // 2. Doble Tanque de Oxígeno trasero (Estilo Lethal Company / REPO)
+        const tanque1 = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.8, 16), matTanque);
+        tanque1.position.set(-0.35, 2.1, -0.9);
+        tanque1.rotation.x = 0.1;
+        grupo.add(tanque1);
+
+        const tapa1 = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.45, 0.3, 16), matTapaTanque);
+        tapa1.position.set(-0.35, 3.55, -0.95);
+        grupo.add(tapa1);
+
+        const tanque2 = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.8, 16), matTanque);
+        tanque2.position.set(0.35, 2.1, -0.9);
+        tanque2.rotation.x = 0.1;
+        grupo.add(tanque2);
+
+        const tapa2 = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.45, 0.3, 16), matTapaTanque);
+        tapa2.position.set(0.35, 3.55, -0.95);
+        grupo.add(tapa2);
+
+        // 3. Correas / Arneses cruzados en la espalda
+        const correa1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 0.1), matCorreas);
+        correa1.position.set(0, 2.5, -0.85);
+        correa1.rotation.z = 0.4;
+        grupo.add(correa1);
+
+        const correa2 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 0.1), matCorreas);
+        correa2.position.set(0, 2.5, -0.85);
+        correa2.rotation.z = -0.4;
+        grupo.add(correa2);
+
+        // 4. Casco robusto y cabeza
+        const casco = new THREE.Mesh(new THREE.SphereGeometry(1.15, 24, 24), new THREE.MeshLambertMaterial({ color: 0x1f232a }));
+        casco.position.y = 4.7; 
+        grupo.add(casco);
+
+        // 5. Ojos expresivos dentro del visor oscuro
         const materialOjo = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), materialOjo);
-        ojoIzq.position.set(-0.35, 4.9, -0.95); grupo.add(ojoIzq);
+        const ojoIzq = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
+        ojoIzq.position.set(-0.3, 4.8, -0.92);
+        grupo.add(ojoIzq);
 
-        const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), materialOjo);
-        ojoDer.position.set(0.35, 4.9, -0.95); grupo.add(ojoDer);
+        const ojoDer = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), materialOjo);
+        ojoDer.position.set(0.3, 4.8, -0.92);
+        grupo.add(ojoDer);
 
+        // Pupilas
         const materialPupila = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), materialPupila);
-        pupilaIzq.position.set(-0.35, 4.9, -1.08); grupo.add(pupilaIzq);
+        const pupilaIzq = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
+        pupilaIzq.position.set(-0.3, 4.8, -1.04);
+        grupo.add(pupilaIzq);
 
-        const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), materialPupila);
-        pupilaDer.position.set(0.35, 4.9, -1.08); grupo.add(pupilaDer);
+        const pupilaDer = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), materialPupila);
+        pupilaDer.position.set(0.3, 4.8, -1.04);
+        grupo.add(pupilaDer);
 
-        const boca = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.1), materialPupila);
-        boca.position.set(0, 4.45, -1.0); grupo.add(boca);
+        // Boca expresiva
+        const boca = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.07, 0.1), materialPupila);
+        boca.position.set(0, 4.38, -0.96);
+        grupo.add(boca);
 
         return grupo;
     }
 
-    // --- POSICIÓN INICIAL ALEATORIA ---
     const anguloAleatorio = Math.random() * Math.PI * 2;
     const distanciaAleatoria = 6 + Math.random() * 4; 
     const posXInicial = Math.cos(anguloAleatorio) * distanciaAleatoria;
@@ -473,7 +502,6 @@ function iniciarMotor3D(cantidadJugadores) {
         let testX = camera.position.x + movX;
         let testZ = camera.position.z + movZ;
 
-        // Límites expandidos para poder moverte por las salas adyacentes
         if (testX < -58 || testX > 58) movX = 0;
         if (testZ < -58 || testZ > 58) movZ = 0;
 
