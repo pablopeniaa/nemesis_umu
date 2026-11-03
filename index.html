@@ -487,13 +487,12 @@
             scene.add(grupoEstrada);
 
             // --- POSICIÓN INICIAL ALEATORIA PARA EVITAR EL BUG DE APARICIÓN ---
-            // Generamos un punto aleatorio seguro alejado del centro y de las paredes
             const anguloAleatorio = Math.random() * Math.PI * 2;
-            const distanciaAleatoria = 6 + Math.random() * 4; // Entre 6 y 10 metros del centro
-            const inicioX = Math.cos(anguloAleatorio) * distanciaAleatoria;
-            const inicioZ = Math.sin(anguloAleatorio) * distanciaAleatoria;
+            const distanciaAleatoria = 6 + Math.random() * 4; 
+            const posXInicial = Math.cos(anguloAleatorio) * distanciaAleatoria;
+            const posZInicial = Math.sin(anguloAleatorio) * distanciaAleatoria;
 
-            camera.position.set(inicioX, 6, inicioZ); 
+            camera.position.set(posXInicial, 6, posZInicial); 
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
