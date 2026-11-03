@@ -87,6 +87,14 @@
             width: 4px; height: 4px; background-color: rgba(255,255,255,0.5); border-radius: 50%;
             z-index: 101; pointer-events: none;
         }
+
+        /* NUEVO: Título Cinematográfico */
+        #titulo-zona {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; color: #3366ff; text-shadow: 0 0 30px rgba(51,102,255,1);
+            font-weight: bold; letter-spacing: 15px; z-index: 105; pointer-events: none;
+            opacity: 0; transition: opacity 2s ease-in-out; display: none; text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -119,10 +127,13 @@
 
     <div id="pantalla-juego">
         <div id="ui-juego">
-            <h3 style="margin:0; border-bottom: 1px solid #33ff33;">SALA PRINCIPAL - SECTOR 1</h3>
+            <h3 style="margin:0; border-bottom: 1px solid #33ff33;">HIBERNATORIO</h3>
             <p id="info-rol" class="texto-secundario" style="margin: 5px 0;"></p>
         </div>
         
+        <!-- Título que aparece en grande -->
+        <div id="titulo-zona">HIBERNATORIO</div>
+
         <div id="instrucciones-3d">
             <h2 style="margin-top:0;">INICIANDO SOPORTE VITAL</h2>
             <p>HAZ CLIC EN CUALQUIER PARTE PARA ENTRAR</p>
@@ -176,9 +187,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        let miSalaActual = "";
-        let miNombre = ""; 
-        let miPersonajeAsignado = ""; 
+        let miSalaActual = ""; let miNombre = ""; let miPersonajeAsignado = ""; 
 
         const coloresPersonajes = {
             "Soldado": "#ff3333", "Capitán": "#3366ff", "Explorador": "#9933ff",
@@ -195,10 +204,8 @@
             if (!miNombre) return alert("ERROR: IDENTIFICACIÓN REQUERIDA.");
             const codigo = generarCodigo(); miSalaActual = codigo;
             db.ref('salas/' + codigo).set({ creador: miNombre, estado: 'esperando', jugadores: { [miNombre]: "Sin asignar" } });
-            document.getElementById('menu-principal').style.display = 'none';
-            document.getElementById('sala-espera').style.display = 'block';
-            document.getElementById('mostrar-codigo').innerText = codigo;
-            document.getElementById('btn-empezar').style.display = 'block'; 
+            document.getElementById('menu-principal').style.display = 'none'; document.getElementById('sala-espera').style.display = 'block';
+            document.getElementById('mostrar-codigo').innerText = codigo; document.getElementById('btn-empezar').style.display = 'block'; 
             escucharCambiosSala(codigo);
         }
 
@@ -210,10 +217,8 @@
                 if (snapshot.exists()) {
                     miSalaActual = codigo;
                     db.ref('salas/' + codigo + '/jugadores').update({ [miNombre]: "Sin asignar" });
-                    document.getElementById('menu-principal').style.display = 'none';
-                    document.getElementById('sala-espera').style.display = 'block';
-                    document.getElementById('mostrar-codigo').innerText = codigo;
-                    document.getElementById('btn-empezar').style.display = 'none'; 
+                    document.getElementById('menu-principal').style.display = 'none'; document.getElementById('sala-espera').style.display = 'block';
+                    document.getElementById('mostrar-codigo').innerText = codigo; document.getElementById('btn-empezar').style.display = 'none'; 
                     escucharCambiosSala(codigo);
                 } else alert("NAVE NO ENCONTRADA.");
             });
@@ -295,18 +300,28 @@
                         motor3DIniciado = true;
                         let colorFinal = coloresPersonajes[miPersonajeAsignado] || "#aaaaaa"; 
                         document.getElementById('info-rol').innerHTML = `IDENTIFICACIÓN: ${miNombre} | ROL: <span style="color:${colorFinal}">${miPersonajeAsignado || "Desconocido"}</span>`;
+                        
+                        // Efecto cinemático HIBERNATORIO
+                        const tituloZona = document.getElementById('titulo-zona');
+                        tituloZona.style.display = 'block';
+                        setTimeout(() => tituloZona.style.opacity = '1', 500); // Aparece suavemente
+                        setTimeout(() => {
+                            tituloZona.style.opacity = '0'; // Se desvanece
+                            setTimeout(() => tituloZona.style.display = 'none', 2000);
+                        }, 4000); // Dura 4 segundos en pantalla
+
                         iniciarMotor3D();
                     }
                 }
             });
         }
 
-        // --- MOTOR 3D (PRIMERA PERSONA MULTIJUGADOR) ---
+        // --- MOTOR 3D (HIBERNATORIO) ---
         function iniciarMotor3D() {
             const contenedor = document.getElementById('tablero-juego');
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020202);
-            scene.fog = new THREE.Fog(0x020202, 10, 45);
+            scene.background = new THREE.Color(0x050505);
+            scene.fog = new THREE.Fog(0x050505, 10, 50);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
@@ -314,46 +329,68 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             contenedor.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0x333333);
+            // Luces (Más iluminado para la sala)
+            const ambientLight = new THREE.AmbientLight(0x666666);
             scene.add(ambientLight);
             
-            const pointLight = new THREE.PointLight(0x33ff33, 0.8, 40); 
-            pointLight.position.set(0, 10, 0);
+            const pointLight = new THREE.PointLight(0xccffff, 1.2, 80); // Luz blanca/azulada brillante
+            pointLight.position.set(0, 12, 0);
             scene.add(pointLight);
 
             // --- ESCENARIO ---
-            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x111111 });
-            const materialPared = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+            const materialSuelo = new THREE.MeshLambertMaterial({ color: 0x222222 });
+            const materialPared = new THREE.MeshLambertMaterial({ color: 0x333333 });
             
             const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
             suelo.rotation.x = -Math.PI / 2; scene.add(suelo);
             
-            const gridHelper = new THREE.GridHelper(40, 40, 0x114411, 0x051105);
+            const gridHelper = new THREE.GridHelper(40, 40, 0x336699, 0x112233);
             gridHelper.position.y = 0.01; scene.add(gridHelper);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), materialSuelo);
             techo.rotation.x = Math.PI / 2; techo.position.y = 15; scene.add(techo);
 
             const geomPared = new THREE.PlaneGeometry(40, 15);
-            const pared1 = new THREE.Mesh(geomPared, materialPared); pared1.position.set(0, 7.5, -20); scene.add(pared1);
-            const pared2 = new THREE.Mesh(geomPared, materialPared); pared2.position.set(0, 7.5, 20); pared2.rotation.y = Math.PI; scene.add(pared2);
-            const pared3 = new THREE.Mesh(geomPared, materialPared); pared3.position.set(-20, 7.5, 0); pared3.rotation.y = Math.PI / 2; scene.add(pared3);
-            const pared4 = new THREE.Mesh(geomPared, materialPared); pared4.position.set(20, 7.5, 0); pared4.rotation.y = -Math.PI / 2; scene.add(pared4);
+            const paredN = new THREE.Mesh(geomPared, materialPared); paredN.position.set(0, 7.5, -20); scene.add(paredN);
+            const paredS = new THREE.Mesh(geomPared, materialPared); paredS.position.set(0, 7.5, 20); paredS.rotation.y = Math.PI; scene.add(paredS);
+            const paredE = new THREE.Mesh(geomPared, materialPared); paredE.position.set(-20, 7.5, 0); paredE.rotation.y = Math.PI / 2; scene.add(paredE);
+            const paredO = new THREE.Mesh(geomPared, materialPared); paredO.position.set(20, 7.5, 0); paredO.rotation.y = -Math.PI / 2; scene.add(paredO);
 
+            // --- PUERTAS ---
             const geomPuerta = new THREE.PlaneGeometry(6, 10);
-            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x550000 });
-            const puerta1 = new THREE.Mesh(geomPuerta, materialPuerta); puerta1.position.set(0, 5, -19.9); scene.add(puerta1);
-            const puerta2 = new THREE.Mesh(geomPuerta, materialPuerta); puerta2.position.set(0, 5, 19.9); puerta2.rotation.y = Math.PI; scene.add(puerta2);
-            const puerta3 = new THREE.Mesh(geomPuerta, materialPuerta); puerta3.position.set(-19.9, 5, 0); puerta3.rotation.y = Math.PI / 2; scene.add(puerta3);
-            const puerta4 = new THREE.Mesh(geomPuerta, materialPuerta); puerta4.position.set(19.9, 5, 0); puerta4.rotation.y = -Math.PI / 2; scene.add(puerta4);
+            const materialPuerta = new THREE.MeshLambertMaterial({ color: 0x224422 }); // Puertas verdosas/oscuras
+
+            // Sur (+Z): 2 Puertas
+            const puertaS1 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS1.position.set(-8, 5, 19.9); puertaS1.rotation.y = Math.PI; scene.add(puertaS1);
+            const puertaS2 = new THREE.Mesh(geomPuerta, materialPuerta); puertaS2.position.set(8, 5, 19.9); puertaS2.rotation.y = Math.PI; scene.add(puertaS2);
+
+            // Este y Oeste (1 Puerta cada una)
+            const puertaE = new THREE.Mesh(geomPuerta, materialPuerta); puertaE.position.set(-19.9, 5, 0); puertaE.rotation.y = Math.PI / 2; scene.add(puertaE);
+            const puertaO = new THREE.Mesh(geomPuerta, materialPuerta); puertaO.position.set(19.9, 5, 0); puertaO.rotation.y = -Math.PI / 2; scene.add(puertaO);
+
+            // --- CÁPSULAS DE HIBERNACIÓN (Pared Norte -Z) ---
+            const matCapsulaBase = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            const matCapsulaCristal = new THREE.MeshLambertMaterial({ color: 0x3388ff, transparent: true, opacity: 0.7, emissive: 0x113366 });
+            
+            for(let i=0; i<4; i++) {
+                let posX = -12 + (i * 8); // Separadas por 8 unidades
+                
+                let base = new THREE.Mesh(new THREE.BoxGeometry(4, 9, 2), matCapsulaBase);
+                base.position.set(posX, 4.5, -19); // Pegadas a la pared norte
+                scene.add(base);
+                
+                let cristal = new THREE.Mesh(new THREE.BoxGeometry(3.6, 7, 2.2), matCapsulaCristal);
+                cristal.position.set(posX, 4.5, -19); // Ligeramente más afuera para el cristal
+                scene.add(cristal);
+            }
 
             // --- JUGADOR Y CONTROLES ---
-            camera.position.set(Math.random()*10 - 5, 6, Math.random()*10 - 5); // Empezar en una zona aleatoria
+            camera.position.set(0, 6, 0); // Aparecer en el centro
             camera.rotation.order = 'YXZ'; 
             let yaw = 0; let pitch = 0;
             const teclas = { w: false, a: false, s: false, d: false };
             const velocidad = 0.2;
-            const radioColision = 2.0; // Espacio vital entre jugadores
+            const radioColision = 2.0;
 
             contenedor.addEventListener('click', () => contenedor.requestPointerLock());
             document.addEventListener('pointerlockchange', () => {
@@ -389,50 +426,29 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            // --- CREACIÓN DE MODELOS HUMANOS ---
             function crearModeloHumano(colorHex) {
                 const grupo = new THREE.Group();
                 const materialColor = new THREE.MeshLambertMaterial({ color: colorHex });
-                
-                // Cuerpo (Traje Espacial)
                 const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 4, 16), materialColor);
-                cuerpo.position.y = 2; // Va de 0 a 4 de altura
-                grupo.add(cuerpo);
-                
-                // Cabeza (Casco)
+                cuerpo.position.y = 2; grupo.add(cuerpo);
                 const cabeza = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), materialColor);
-                cabeza.position.y = 5.1; 
-                grupo.add(cabeza);
-                
-                // Visor del casco (Para saber hacia dónde mira el jugador)
+                cabeza.position.y = 5.1; grupo.add(cabeza);
                 const visor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 1.2), new THREE.MeshLambertMaterial({ color: 0x111111 }));
-                visor.position.set(0, 5.3, -0.7); // El visor apunta hacia "-z" (el frente en Three.js)
-                grupo.add(visor);
-
+                visor.position.set(0, 5.3, -0.7); grupo.add(visor);
                 return grupo;
             }
 
-            // --- SISTEMA MULTIJUGADOR ---
             const otrosJugadoresModelos = {};
-            
-            // Escuchar posiciones de Firebase
             db.ref('salas/' + miSalaActual + '/posiciones').on('value', (snapshot) => {
                 const posiciones = snapshot.val() || {};
-                
                 for (let nombre in posiciones) {
-                    if (nombre === miNombre) continue; // No nos dibujamos a nosotros mismos
-                    
+                    if (nombre === miNombre) continue; 
                     if (!otrosJugadoresModelos[nombre]) {
-                        // Es un jugador nuevo, creamos su astronauta averiguando su color
                         db.ref('salas/' + miSalaActual + '/jugadores/' + nombre).once('value').then(snapRol => {
-                            let rol = snapRol.val();
-                            let color = coloresPersonajes[rol] || "#aaaaaa";
-                            let modelo = crearModeloHumano(color);
-                            scene.add(modelo);
-                            otrosJugadoresModelos[nombre] = modelo;
+                            let rol = snapRol.val(); let color = coloresPersonajes[rol] || "#aaaaaa";
+                            let modelo = crearModeloHumano(color); scene.add(modelo); otrosJugadoresModelos[nombre] = modelo;
                         });
                     } else {
-                        // Actualizar posición y rotación
                         otrosJugadoresModelos[nombre].position.x = posiciones[nombre].x;
                         otrosJugadoresModelos[nombre].position.z = posiciones[nombre].z;
                         otrosJugadoresModelos[nombre].rotation.y = posiciones[nombre].r;
@@ -443,18 +459,15 @@
             function colisionaConAlguien(testX, testZ) {
                 for (let nombre in otrosJugadoresModelos) {
                     let otro = otrosJugadoresModelos[nombre];
-                    let dx = testX - otro.position.x;
-                    let dz = testZ - otro.position.z;
+                    let dx = testX - otro.position.x; let dz = testZ - otro.position.z;
                     if (Math.sqrt(dx*dx + dz*dz) < radioColision) return true;
                 }
                 return false;
             }
 
-            const direccion = new THREE.Vector3();
-            const derecha = new THREE.Vector3();
-            let lastX = 0, lastZ = 0, lastYaw = 0; // Para no saturar Firebase si no nos movemos
+            const direccion = new THREE.Vector3(); const derecha = new THREE.Vector3();
+            let lastX = 0, lastZ = 0, lastYaw = 0; 
 
-            // --- BUCLE DE JUEGO ---
             function animar3D() {
                 requestAnimationFrame(animar3D);
 
@@ -469,27 +482,22 @@
                 if (teclas.a) { movX -= derecha.x * velocidad; movZ -= derecha.z * velocidad; }
                 if (teclas.d) { movX += derecha.x * velocidad; movZ += derecha.z * velocidad; }
 
-                // Comprobar colisiones eje por eje para permitir el deslizamiento
                 let testX = camera.position.x + movX;
                 let testZ = camera.position.z + movZ;
 
-                // Colisiones con las paredes de la habitación (-18 a 18 para no atravesarlas)
+                // Colisiones con paredes. Modificado para no atravesar las cápsulas en el norte (Z = -17 en vez de -18)
                 if (testX < -18 || testX > 18) movX = 0;
-                if (testZ < -18 || testZ > 18) movZ = 0;
+                if (testZ < -17 || testZ > 18) movZ = 0;
 
-                // Colisiones con otros humanos
                 if (colisionaConAlguien(camera.position.x + movX, camera.position.z)) movX = 0;
                 if (colisionaConAlguien(camera.position.x, camera.position.z + movZ)) movZ = 0;
 
                 camera.position.x += movX;
                 camera.position.z += movZ;
 
-                // Enviar nuestra posición a Firebase SOLO si nos hemos movido o girado
                 if (Math.abs(camera.position.x - lastX) > 0.05 || Math.abs(camera.position.z - lastZ) > 0.05 || Math.abs(yaw - lastYaw) > 0.05) {
                     db.ref('salas/' + miSalaActual + '/posiciones/' + miNombre).set({
-                        x: camera.position.x,
-                        z: camera.position.z,
-                        r: yaw // Enviamos hacia donde miramos para rotar nuestro modelo en sus pantallas
+                        x: camera.position.x, z: camera.position.z, r: yaw
                     });
                     lastX = camera.position.x; lastZ = camera.position.z; lastYaw = yaw;
                 }
