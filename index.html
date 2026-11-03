@@ -57,7 +57,7 @@
         }
 
         .contenedor::before {
-            content: "SISTEMA MU-TH-UR 6000";
+            content: "SISTEMA OR-I-HU6000";
             position: absolute;
             top: -10px;
             left: 10px;
@@ -163,11 +163,19 @@
         <button style="margin-top: 20px;" onclick="empezarJuego()" id="btn-empezar">DESPERTAR DEL HIPERSUEÑO</button>
     </div>
 
+    <!-- NUEVO: Contenedor del Juego -->
+    <div class="contenedor" id="pantalla-juego" style="display: none; width: 80%; height: 80vh; max-width: 800px;">
+        <h2>Nave Nostromo - Sector de Carga</h2>
+        <p class="texto-secundario">SISTEMAS DE SOPORTE VITAL: EN LÍNEA</p>
+        <div id="tablero-juego" style="border: 1px solid rgba(51, 255, 51, 0.6); height: 60vh; margin-top: 20px; position: relative; background-color: rgba(0, 0, 0, 0.8);">
+            <!-- Aquí irá el mapa, los personajes y el alien -->
+        </div>
+    </div>
+
     <script>
         // --- 1. CARGAR LA IMAGEN DEL ASTEROIDE ---
         const imgAsteroide = new Image();
-        // Aquí pones el enlace de tu imagen PNG sin fondo. 
-        imgAsteroide.src = 'asteroide.png'; 
+        imgAsteroide.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Asteroid_Ida.png/480px-Asteroid_Ida.png'; 
 
         const canvas = document.getElementById('fondo-espacial');
         const ctx = canvas.getContext('2d');
@@ -211,13 +219,13 @@
                 if (e.x < 0) { e.x = canvas.width; e.y = Math.random() * canvas.height; }
             });
 
-            // Generar asteroides de imagen (solo si la imagen ya ha cargado)
+            // Generar asteroides de imagen
             if (imgAsteroide.complete && Math.random() < 0.008) {
                 asteroides.push({
                     x: canvas.width + 150,
                     y: Math.random() * canvas.height,
                     velocidad: Math.random() * 1 + 0.3,
-                    tamaño: Math.random() * 150 + 80, // Imágenes más grandes
+                    tamaño: Math.random() * 150 + 80,
                     rotacion: Math.random() * Math.PI * 2,
                     velRotacion: (Math.random() - 0.5) * 0.02
                 });
@@ -229,15 +237,11 @@
                 obj.x -= obj.velocidad;
                 obj.rotacion += obj.velRotacion;
 
-                ctx.save(); // Guarda el estado actual de la pantalla
-                
-                ctx.translate(obj.x, obj.y); // Mueve el centro de giro a la posición del asteroide
-                ctx.rotate(obj.rotacion); // Rota la pantalla
-                
-                // Dibuja la imagen. Le restamos la mitad de su tamaño en X e Y para que gire sobre su propio centro
+                ctx.save();
+                ctx.translate(obj.x, obj.y);
+                ctx.rotate(obj.rotacion);
                 ctx.drawImage(imgAsteroide, -obj.tamaño / 2, -obj.tamaño / 2, obj.tamaño, obj.tamaño);
-
-                ctx.restore(); // Restaura la pantalla para no afectar a los demás asteroides
+                ctx.restore();
 
                 if (obj.x < -300) asteroides.splice(i, 1);
             }
@@ -291,16 +295,30 @@
         }
 
         function escucharCambiosSala(codigo) {
+            // Escuchar la lista de jugadores
             db.ref('salas/' + codigo + '/jugadores').on('value', (snapshot) => {
                 const jugadores = snapshot.val();
                 const lista = document.getElementById('lista-jugadores');
                 lista.innerHTML = ''; 
                 for (let jugador in jugadores) lista.innerHTML += `<li>${jugador} [EN LÍNEA]</li>`;
             });
+
+            // NUEVO: Escuchar el estado de la partida
+            db.ref('salas/' + codigo + '/estado').on('value', (snapshot) => {
+                const estado = snapshot.val();
+                if (estado === 'jugando') {
+                    // Ocultar lobby, mostrar juego
+                    document.getElementById('sala-espera').style.display = 'none';
+                    document.getElementById('pantalla-juego').style.display = 'block';
+                }
+            });
         }
         
         function empezarJuego() {
-            alert("SISTEMA ALERTA: CRIOGENIA DESACTIVADA. PREPARANDO ENTORNO DE JUEGO...");
+            // NUEVO: Avisar a Firebase de que la partida comienza
+            db.ref('salas/' + miSalaActual).update({
+                estado: 'jugando'
+            });
         }
     </script>
 </body>
