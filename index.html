@@ -12,7 +12,7 @@
     <!-- MOTOR 3D (Three.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- ENLACE AL ARCHIVO DE ESTILOS -->
+    <!-- ESTILOS CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -54,15 +54,22 @@
         <div id="instrucciones-3d">
             <h2 style="margin-top:0;">INICIANDO SOPORTE VITAL</h2>
             <p>HAZ CLIC EN CUALQUIER PARTE PARA ENTRAR</p>
-            <p class="texto-secundario">Moverse: W A S D | Mirar: Ratón</p>
+            <p class="texto-secundario">Moverse: W A S D | Mirar: Ratón | Minimapa: M</p>
         </div>
         
         <div id="mirilla"></div>
         <div id="interaccion-ui">ESTRADA [TRIPULANTE CAÍDO]</div>
+
+        <!-- MINIMAPA HUD (Se activa con la tecla M) -->
+        <div id="contenedor-minimapa" style="position: absolute; top: 20px; right: 20px; width: 160px; height: 160px; border: 2px solid #33ff33; background: rgba(0,0,0,0.8); display: none; z-index: 105; pointer-events: none;">
+            <div style="font-size: 10px; text-align: center; border-bottom: 1px solid #33ff33; padding: 2px; color: #33ff33;">RADAR NAVE [M]</div>
+            <canvas id="minimapa-canvas" width="156" height="138"></canvas>
+        </div>
+
         <div id="tablero-juego"></div>
     </div>
 
-    <!-- ENLACE AL ARCHIVO DE JAVASCRIPT -->
+    <!-- SCRIPT PRINCIPAL -->
     <script src="script.js"></script>
 </body>
 </html>
